@@ -2,6 +2,9 @@
 
 export const API_BASE = process.env.OHDP_API_BASE ?? "http://127.0.0.1:8000";
 
+// Каталожно ядро (CKAN, вариант А) — DCAT-AP / CKAN крайни точки за харвестване.
+export const CKAN_BASE = process.env.OHDP_CKAN_URL ?? "http://127.0.0.1:5000";
+
 export interface DatasetSummary {
   identifier: string;
   uri: string;

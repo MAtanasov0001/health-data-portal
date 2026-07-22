@@ -33,7 +33,9 @@ services:
       - solr-data:/var/solr
 
   ckan:
-    image: ckan/ckan-base:2.10
+    # Каталожно ядро (вариант А): CKAN + ckanext-dcat (DCAT-AP / харвест).
+    build:
+      context: ../catalog/ckan
     depends_on:
       db:
         condition: service_healthy
@@ -46,8 +48,26 @@ services:
       CKAN_SOLR_URL: http://solr:8983/solr/ckan
       CKAN_REDIS_URL: redis://redis:6379/0
       CKAN_SITE_URL: ${CKAN_SITE_URL:-http://localhost:5000}
+      # Активни разширения: envvars (за конфиг през env), dcat + json интерфейс.
+      CKAN__PLUGINS: "envvars dcat dcat_json_interface structured_data"
+      # DCAT-AP профил за сериализацията (ключът ckanext.dcat.rdf.profiles).
+      CKAN___CKANEXT__DCAT__RDF__PROFILES: ${CKAN_DCAT_PROFILE:-euro_dcat_ap_2}
+      # Данни за първоначалния sysadmin (само локални заместители).
+      CKAN_SYSADMIN_NAME: ${CKAN_SYSADMIN_NAME:-ckan_admin}
+      CKAN_SYSADMIN_PASSWORD: ${CKAN_SYSADMIN_PASSWORD:-change-me-local-only}
+      CKAN_SYSADMIN_EMAIL: ${CKAN_SYSADMIN_EMAIL:-admin@localhost}
+      CKAN_SHARED_DIR: /shared
+    volumes:
+      # Споделен обем за API токена, издаден при първоначалната подготовка.
+      - ckan-shared:/shared
     ports:
       - "5000:5000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/3/action/status_show || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
 
   api:
     build:
@@ -66,11 +86,34 @@ services:
       context: ../frontend
     environment:
       OHDP_API_BASE: http://api:8000
+      OHDP_CKAN_URL: ${CKAN_SITE_URL:-http://localhost:5000}
     depends_on:
       - api
     ports:
       - "3000:3000"
 
+  # Адаптер снапшот → CKAN. Пуска се при поискване, СЛЕД като CKAN е готов и има
+  # произведени снапшоти:  docker compose --profile tools run --rm catalog-sync
+  catalog-sync:
+    image: python:3.12-slim
+    profiles: ["tools"]
+    depends_on:
+      ckan:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      CKAN_URL: http://ckan:5000
+      OHDP_API_BASE: ${API_BASE_URL:-http://localhost:8000}
+      OHDP_SNAPSHOTS: /snapshots
+      CKAN_API_TOKEN_FILE: /shared/ckan_api_token
+      CKAN_ORG: ${CKAN_ORG:-midt}
+    volumes:
+      - ../catalog/sync:/app:ro
+      - ../ingestion/snapshots:/snapshots:ro
+      - ckan-shared:/shared:ro
+    command: ["python", "ckan_sync.py"]
+
 volumes:
   db-data:
   solr-data:
+  ckan-shared:

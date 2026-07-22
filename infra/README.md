@@ -12,8 +12,10 @@ cp .env.example .env          # само локални заместители, 
 # 1) първо произведи снапшот, за да има какво да поднася API-то:
 (cd ../ingestion && pip install -e . && \
    python -m ingestion.pipeline run ../pilot/hospitalizacii-po-oblast-2023 --out snapshots)
-# 2) вдигни средата:
-docker compose up --build
+# 2) вдигни средата (CKAN прави db init, sysadmin и API токен автоматично):
+docker compose up --build -d
+# 3) публикувай снапшотите в каталога (след като CKAN е здрав):
+docker compose --profile tools run --rm catalog-sync
 ```
 
 Услуги след вдигане:
@@ -22,8 +24,13 @@ docker compose up --build
 |--------|-------|------|
 | frontend | http://localhost:3000 | Публичен Next.js сайт |
 | api | http://localhost:8000/docs | Публично четящо API (OpenAPI 3.1) |
-| ckan | http://localhost:5000 | Каталог (вариант А) |
+| ckan | http://localhost:5000 | Каталог (вариант А) + DCAT-AP/харвест |
+| catalog-sync | (профил `tools`) | Адаптер снапшот → CKAN (пуска се при поискване) |
 | db / redis / solr | вътрешни | Зависимости на CKAN |
+
+Каталогът се пълни от **`catalog-sync`** (адаптер снапшот → CKAN), не автоматично: пуска се
+след като CKAN е готов и има произведени снапшоти. Верификация на DCAT-AP/харвест крайните
+точки — виж [`../catalog/README.md`](../catalog/README.md).
 
 ## Тайни и сигурност
 

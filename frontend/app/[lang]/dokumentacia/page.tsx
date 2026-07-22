@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { API_BASE } from "@/lib/api";
+import { API_BASE, CKAN_BASE } from "@/lib/api";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
 
@@ -26,6 +26,23 @@ export default async function DocsPage({ params }: { params: Promise<{ lang: str
         </li>
         <li>
           <a href={`${API_BASE}/v1/catalog.jsonld`}>DCAT-AP каталог (JSON-LD)</a>
+        </li>
+      </ul>
+
+      <h2>Каталог (CKAN / DCAT-AP)</h2>
+      <p>
+        Каталожното ядро е CKAN (вариант А). Метаданните се публикуват по DCAT-AP и са
+        достъпни за автоматично харвестване от data.egov.bg и data.europa.eu.
+      </p>
+      <ul>
+        <li>
+          <a href={`${CKAN_BASE}/catalog.jsonld`}>DCAT-AP каталог от CKAN (JSON-LD)</a>
+        </li>
+        <li>
+          <a href={`${CKAN_BASE}/catalog.xml`}>DCAT-AP каталог от CKAN (RDF/XML)</a>
+        </li>
+        <li>
+          <a href={`${CKAN_BASE}/api/3/action/package_list`}>CKAN package_list</a>
         </li>
       </ul>
 

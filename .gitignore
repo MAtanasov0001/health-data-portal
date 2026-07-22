@@ -9,6 +9,7 @@
 secrets/
 **/secrets/
 *.secret
+**/ckan_api_token
 
 # Node / Next.js
 node_modules/
