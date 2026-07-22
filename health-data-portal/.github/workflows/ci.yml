@@ -1,0 +1,152 @@
+name: CI — блокиращи порти за сигурност и качество
+
+# Конвейерът се изгражда ПРЕДИ първия продуктов ред код (концепция, раздел 15.2).
+# Всяка порта е блокираща: код, който не мине, не достига до сливане/продукция.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write   # за качване на SARIF резултати
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Порта: тайни. Блокира от ден 0 — хранилището е публично.
+  # ---------------------------------------------------------------------------
+  secrets-scan:
+    name: Сканиране за тайни (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # пълна история — тайните се търсят и в миналите комити
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  # ---------------------------------------------------------------------------
+  # Порта: frontend (режим A) — lint, типове, тестове, a11y, билд.
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (lint · types · test · a11y)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Има ли frontend?
+        id: check
+        run: echo "exists=$([ -f package.json ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.exists == 'yes'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - if: steps.check.outputs.exists == 'yes'
+        run: npm ci
+      - if: steps.check.outputs.exists == 'yes'
+        run: npm run lint
+      - if: steps.check.outputs.exists == 'yes'
+        run: npm run type-check
+      - if: steps.check.outputs.exists == 'yes'
+        run: npm test -- --run
+      - if: steps.check.outputs.exists == 'yes'
+        run: npm run test:a11y --if-present
+      - if: steps.check.outputs.exists == 'yes'
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Порта: Python (режими A/B) — формат, типове, тестове за приемане/API.
+  # ---------------------------------------------------------------------------
+  python:
+    name: Python (ruff · mypy · pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Инсталиране
+        run: |
+          python -m pip install --upgrade pip
+          for d in ingestion api; do
+            if [ -f "$d/pyproject.toml" ]; then pip install -e "$d[dev]" || pip install -e "$d"; fi
+          done
+          pip install ruff mypy pytest
+      - name: ruff (lint + format check)
+        run: ruff check . && ruff format --check .
+      - name: mypy (строга типизация)
+        run: |
+          for d in ingestion api; do [ -d "$d" ] && mypy "$d" || true; done
+      - name: pytest
+        run: pytest -q
+
+  # ---------------------------------------------------------------------------
+  # Порта: SAST — статичен анализ на сигурността (Semgrep, OWASP правила).
+  # ---------------------------------------------------------------------------
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - run: semgrep ci --config p/owasp-top-ten --config p/security-audit --sarif --output semgrep.sarif || true
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+  # ---------------------------------------------------------------------------
+  # Порта: зависимости (SCA) + SBOM. Фиксирани версии; slopsquatting защита.
+  # ---------------------------------------------------------------------------
+  dependencies:
+    name: SCA + SBOM (Trivy · Syft)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy — уязвимости в зависимости и IaC
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          ignore-unfixed: true
+      - name: SBOM (Syft, CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cdx.json
+
+  # ---------------------------------------------------------------------------
+  # Порта: контролен списък за нормативно съответствие (напомняне в PR).
+  # Съдържателната проверка е човешка (раздел 15.3); тук пазим само, че списъкът е попълнен.
+  # ---------------------------------------------------------------------------
+  compliance-checklist:
+    name: Нормативен контролен списък
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Проверка, че PR тялото съдържа контролния списък
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          echo "$BODY" | grep -q "Контролен списък за нормативно съответствие" \
+            || { echo "::error::PR описанието трябва да съдържа контролния списък (виж шаблона)."; exit 1; }

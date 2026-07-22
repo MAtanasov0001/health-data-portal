@@ -1,0 +1,31 @@
+# Метаданни на набора — попълват DCAT-AP профила (spec/dcat-ap/profile.json).
+identifier: hospitalizacii-po-oblast-2023
+title:
+  bg: Хоспитализации по област, 2023
+  en: Hospitalisations by region, 2023
+description:
+  bg: >-
+    Агрегиран брой хоспитализации по област и основна диагностична група за 2023 г.
+    Клетки под праг са потиснати (независим контрол на разкриването).
+  en: >-
+    Aggregated number of hospitalisations by region and major diagnostic group for 2023.
+    Cells below threshold are suppressed (independent disclosure control).
+publisher: Министерство на иновациите и дигиталната трансформация (МИДТ)
+contact_email: data@health.egov.bg
+theme:
+  - HEAL
+keyword:
+  bg: [хоспитализации, болници, диагностични групи]
+  en: [hospitalisations, hospitals]
+accrual_periodicity: ANNUAL
+spatial: [BG]
+temporal:
+  start: '2023-01-01'
+  end: '2023-12-31'
+access_rights: PUBLIC
+license: CC-BY-4.0
+provenance:
+  bg: >-
+    Източник: пилотни/синтетични данни (Диагноза България). Метод на приемане: файлово подаване
+    (CSV + метаданни). Порталът прилага независим контрол на разкриването.
+version: 1.0.0

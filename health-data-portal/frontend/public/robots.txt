@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Каталогът е публичен и предназначен за индексиране (отворени данни, SEO — МЕ76–78).
+Sitemap: https://data.health.egov.bg/sitemap.xml

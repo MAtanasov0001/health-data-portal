@@ -1,0 +1,17 @@
+# gitleaks конфигурация — блокираща порта за тайни (публично хранилище).
+# Използва вградените правила и добавя разумен allowlist само за примерни файлове.
+title = "Open Health Data Portal — gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Позволени примерни/шаблонни файлове (без реални тайни)"
+paths = [
+  '''\.env\.example$''',
+  '''.*\.tfvars\.example$''',
+]
+# Плейсхолдъри, които НЕ са реални тайни (използвай точно тези в примерите):
+regexes = [
+  '''(?i)(changeme|your[-_]?key[-_]?here|example|placeholder|<[^>]+>)''',
+]

@@ -1,0 +1,58 @@
+# --- Тайни: НУЛА тайни в хранилището (публично от ден 1). Сканирането е блокираща CI порта. ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+**/secrets/
+*.secret
+
+# Node / Next.js
+node_modules/
+.next/
+next-env.d.ts
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Данни/снапшоти (не се комитват — генерират се от тръбата)
+/data/
+**/snapshots/
+*.snapshot
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!*.tfvars.example
+
+# Docker
+docker-compose.override.yml

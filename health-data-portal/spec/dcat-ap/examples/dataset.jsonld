@@ -1,0 +1,87 @@
+{
+  "@context": {
+    "dcat": "http://www.w3.org/ns/dcat#",
+    "dct": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "vcard": "http://www.w3.org/2006/vcard/ns#",
+    "adms": "http://www.w3.org/ns/adms#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "spdx": "http://spdx.org/rdf/terms#",
+    "healthPortal": "https://data.health.egov.bg/ns/portal#"
+  },
+  "@id": "https://data.health.egov.bg/dataset/hospitalizacii-po-oblast-2023",
+  "@type": "dcat:Dataset",
+  "dct:identifier": "hospitalizacii-po-oblast-2023",
+  "dct:title": [
+    {"@value": "Хоспитализации по област, 2023", "@language": "bg"},
+    {"@value": "Hospitalisations by region, 2023", "@language": "en"}
+  ],
+  "dct:description": [
+    {"@value": "Агрегиран брой хоспитализации по област и основна диагностична група за 2023 г. Клетки под праг са потиснати (контрол на разкриването).", "@language": "bg"},
+    {"@value": "Aggregated number of hospitalisations by region and major diagnostic group for 2023. Cells below threshold are suppressed (disclosure control).", "@language": "en"}
+  ],
+  "dct:publisher": {
+    "@type": "foaf:Agent",
+    "foaf:name": "Министерство на иновациите и дигиталната трансформация (МИДТ)"
+  },
+  "dcat:contactPoint": {
+    "@type": "vcard:Organization",
+    "vcard:fn": "Портал за отворени данни в здравеопазването",
+    "vcard:hasEmail": "mailto:data@health.egov.bg"
+  },
+  "dcat:theme": [
+    {"@id": "http://publications.europa.eu/resource/authority/data-theme/HEAL"}
+  ],
+  "dcat:keyword": [
+    {"@value": "хоспитализации", "@language": "bg"},
+    {"@value": "болници", "@language": "bg"},
+    {"@value": "hospitalisations", "@language": "en"}
+  ],
+  "dct:issued": {"@value": "2024-03-01T09:00:00+02:00", "@type": "http://www.w3.org/2001/XMLSchema#dateTime"},
+  "dct:modified": {"@value": "2024-03-01T09:00:00+02:00", "@type": "http://www.w3.org/2001/XMLSchema#dateTime"},
+  "owl:versionInfo": "1.0.0",
+  "adms:versionNotes": [
+    {"@value": "Първоначален неизменяем снапшот.", "@language": "bg"}
+  ],
+  "dct:accrualPeriodicity": {"@id": "http://publications.europa.eu/resource/authority/frequency/ANNUAL"},
+  "dct:spatial": [{"@id": "http://data.europa.eu/nuts/code/BG"}],
+  "dct:temporal": {
+    "@type": "dct:PeriodOfTime",
+    "dcat:startDate": {"@value": "2023-01-01", "@type": "http://www.w3.org/2001/XMLSchema#date"},
+    "dcat:endDate": {"@value": "2023-12-31", "@type": "http://www.w3.org/2001/XMLSchema#date"}
+  },
+  "dct:accessRights": {"@id": "http://publications.europa.eu/resource/authority/access-right/PUBLIC"},
+  "dct:license": {"@id": "http://creativecommons.org/licenses/by/4.0/"},
+  "dct:provenance": {
+    "@type": "dct:ProvenanceStatement",
+    "dct:description": [
+      {"@value": "Източник: титуляр на данни (агрегирани). Метод на приемане: файлово подаване (CSV + метаданни). Порталът прилага независим контрол на разкриването.", "@language": "bg"}
+    ]
+  },
+  "healthPortal:disclosureControl": {
+    "method": "small-cell-suppression",
+    "minCellSize": 5,
+    "appliedAt": "2024-03-01T09:00:00+02:00",
+    "notes": [
+      {"@value": "Клетки с брой < 5 са потиснати; редови/колонни суми преизчислени, за да не се възстановяват потиснати стойности.", "@language": "bg"}
+    ]
+  },
+  "dcat:distribution": [
+    {
+      "@type": "dcat:Distribution",
+      "@id": "https://data.health.egov.bg/dataset/hospitalizacii-po-oblast-2023/csv",
+      "dct:title": [{"@value": "CSV — хоспитализации по област 2023", "@language": "bg"}],
+      "dcat:accessURL": {"@id": "https://data.health.egov.bg/dataset/hospitalizacii-po-oblast-2023/csv"},
+      "dcat:downloadURL": {"@id": "https://data.health.egov.bg/api/v1/datasets/hospitalizacii-po-oblast-2023/data.csv"},
+      "dct:format": {"@id": "http://publications.europa.eu/resource/authority/file-type/CSV"},
+      "dcat:mediaType": {"@id": "https://www.iana.org/assignments/media-types/text/csv"},
+      "dct:license": {"@id": "http://creativecommons.org/licenses/by/4.0/"},
+      "spdx:checksum": {
+        "@type": "spdx:Checksum",
+        "spdx:algorithm": {"@id": "http://spdx.org/rdf/terms#checksumAlgorithm_sha256"},
+        "spdx:checksumValue": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "dct:issued": {"@value": "2024-03-01T09:00:00+02:00", "@type": "http://www.w3.org/2001/XMLSchema#dateTime"}
+    }
+  ]
+}

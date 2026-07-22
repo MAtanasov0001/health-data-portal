@@ -1,0 +1,26 @@
+# CODEOWNERS — отговорници по компоненти и режим на ревю (чл. 60; docs/review-model.md)
+# Синтаксис: <път>  <@отговорници>. Замести placeholder екипите с реални GitHub handles на Фаза 0.
+
+# По подразбиране — поне един ревюиращ
+*                               @midt/maintainers
+
+# --- Режим A (стандартен) ---
+/frontend/                      @midt/frontend
+/pilot/                         @midt/data-stewards
+/docs/                          @midt/maintainers
+
+# --- Режим B (засилен): ревюиращ, различен от автора ---
+/api/                           @midt/backend
+/ingestion/                     @midt/backend @midt/data-stewards
+/catalog/                       @midt/backend
+/spec/dcat-ap/                  @midt/data-stewards @midt/backend
+/infra/                         @midt/platform
+/.github/                       @midt/platform
+
+# --- Режим C (критичен): експерт по сигурност + двама одобряващи ---
+# (директориите се добавят при започване на разработката на ядрото)
+/api/**/auth/                   @midt/security @midt/platform
+/ingestion/**/disclosure/       @midt/security @midt/data-protection
+/ingestion/**/anonymization/    @midt/security @midt/data-protection
+/infra/**/secrets/              @midt/security @midt/platform
+SECURITY.md                     @midt/security

@@ -1,0 +1,96 @@
+"""Хранилище само за четене над снапшотите, произведени от приемната тръба.
+
+Само стандартна библиотека — четем неизменяемите снапшоти от диска:
+``<root>/<identifier>/<version>/{manifest.json, data.csv, dcat.jsonld}``.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from functools import cmp_to_key
+from pathlib import Path
+from typing import Any
+
+
+@dataclass(frozen=True)
+class DatasetVersion:
+    identifier: str
+    version: str
+    created_at: str
+    checksum_sha256: str
+    row_count: int
+    path: Path
+
+    @property
+    def manifest(self) -> dict[str, Any]:
+        return json.loads((self.path / "manifest.json").read_text(encoding="utf-8"))
+
+    @property
+    def dcat(self) -> dict[str, Any]:
+        return json.loads((self.path / "dcat.jsonld").read_text(encoding="utf-8"))
+
+    def data_csv(self) -> str:
+        return (self.path / "data.csv").read_text(encoding="utf-8")
+
+
+def _semver_key(version: str) -> tuple[int, ...]:
+    parts = []
+    for p in version.split("."):
+        try:
+            parts.append(int(p))
+        except ValueError:
+            parts.append(0)
+    return tuple(parts)
+
+
+class Repository:
+    def __init__(self, root: Path) -> None:
+        self.root = root
+
+    def _versions(self, identifier: str) -> list[DatasetVersion]:
+        ds_dir = self.root / identifier
+        if not ds_dir.is_dir():
+            return []
+        out: list[DatasetVersion] = []
+        for vdir in ds_dir.iterdir():
+            manifest_path = vdir / "manifest.json"
+            if not manifest_path.is_file():
+                continue
+            m = json.loads(manifest_path.read_text(encoding="utf-8"))
+            out.append(
+                DatasetVersion(
+                    identifier=identifier,
+                    version=m["version"],
+                    created_at=m["created_at"],
+                    checksum_sha256=m["checksum_sha256"],
+                    row_count=m["row_count"],
+                    path=vdir,
+                )
+            )
+        out.sort(key=lambda dv: _semver_key(dv.version), reverse=True)
+        return out
+
+    def identifiers(self) -> list[str]:
+        if not self.root.is_dir():
+            return []
+        ids = [p.name for p in self.root.iterdir() if p.is_dir() and self._versions(p.name)]
+        return sorted(ids)
+
+    def latest(self, identifier: str) -> DatasetVersion | None:
+        versions = self._versions(identifier)
+        return versions[0] if versions else None
+
+    def get(self, identifier: str, version: str | None = None) -> DatasetVersion | None:
+        if version is None:
+            return self.latest(identifier)
+        for dv in self._versions(identifier):
+            if dv.version == version:
+                return dv
+        return None
+
+    def list_latest(self) -> list[DatasetVersion]:
+        result = [self.latest(i) for i in self.identifiers()]
+        items = [dv for dv in result if dv is not None]
+        items.sort(key=cmp_to_key(lambda a, b: (a.identifier > b.identifier) - (a.identifier < b.identifier)))
+        return items

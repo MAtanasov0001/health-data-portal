@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "profile": "Open Health Data Portal — DCAT-AP 3.0.1 (health profile)",
+  "version": "0.1.0",
+  "basedOn": "DCAT-AP 3.0.1 + StatDCAT-AP",
+  "description": "Машинно четим метаданен профил. Задължителност: M=mandatory, R=recommended, O=optional.",
+  "namespaces": {
+    "dcat": "http://www.w3.org/ns/dcat#",
+    "dct": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "vcard": "http://www.w3.org/2006/vcard/ns#",
+    "adms": "http://www.w3.org/ns/adms#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "spdx": "http://spdx.org/rdf/terms#"
+  },
+  "classes": {
+    "Catalog": {
+      "rdfType": "dcat:Catalog",
+      "cardinality": "1 на инсталация",
+      "properties": {
+        "dct:title": {"obligation": "M", "type": "rdf:langString", "langs": ["bg", "en"]},
+        "dct:description": {"obligation": "M", "type": "rdf:langString", "langs": ["bg", "en"]},
+        "dct:publisher": {"obligation": "M", "type": "foaf:Agent", "note": "МИДТ"},
+        "dcat:dataset": {"obligation": "M", "type": "dcat:Dataset[]"},
+        "dcat:service": {"obligation": "R", "type": "dcat:DataService[]"},
+        "dct:issued": {"obligation": "R", "type": "xsd:dateTime", "note": "ISO 8601, UTC+2"},
+        "dct:modified": {"obligation": "R", "type": "xsd:dateTime", "note": "ISO 8601, UTC+2"},
+        "dct:language": {"obligation": "M", "type": "skos:Concept[]", "vocabulary": "language"},
+        "dct:license": {"obligation": "R", "type": "dct:LicenseDocument"},
+        "foaf:homepage": {"obligation": "R", "type": "foaf:Document"}
+      }
+    },
+    "Dataset": {
+      "rdfType": "dcat:Dataset",
+      "identifier": "dct:identifier (уникален) + URI, достъпен чрез GET (МЕ72)",
+      "properties": {
+        "dct:title": {"obligation": "M", "type": "rdf:langString", "langs": ["bg", "en"]},
+        "dct:description": {"obligation": "M", "type": "rdf:langString", "langs": ["bg", "en"]},
+        "dct:identifier": {"obligation": "M", "type": "xsd:string"},
+        "dct:publisher": {"obligation": "M", "type": "foaf:Agent"},
+        "dcat:contactPoint": {"obligation": "R", "type": "vcard:Kind"},
+        "dcat:theme": {"obligation": "M", "type": "skos:Concept[]", "vocabulary": "data-theme", "note": "включва HEAL"},
+        "dcat:keyword": {"obligation": "R", "type": "rdf:langString[]"},
+        "dct:issued": {"obligation": "R", "type": "xsd:dateTime", "note": "ISO 8601, UTC+2, от сървъра (чл. 46)"},
+        "dct:modified": {"obligation": "R", "type": "xsd:dateTime", "note": "ISO 8601, UTC+2, от сървъра (чл. 46)"},
+        "owl:versionInfo": {"obligation": "M", "type": "xsd:string", "note": "версия на снапшота; предходни версии остават достъпни (чл. 14)"},
+        "adms:versionNotes": {"obligation": "R", "type": "rdf:langString"},
+        "dct:accrualPeriodicity": {"obligation": "R", "type": "skos:Concept", "vocabulary": "frequency"},
+        "dct:spatial": {"obligation": "R", "type": "skos:Concept[]", "vocabulary": "nuts", "note": "по подразбиране BG"},
+        "dct:temporal": {"obligation": "R", "type": "dct:PeriodOfTime"},
+        "dct:accessRights": {"obligation": "M", "type": "skos:Concept", "vocabulary": "access-right", "note": "по подразбиране PUBLIC"},
+        "dct:license": {"obligation": "R", "type": "dct:LicenseDocument", "note": "по подразбиране CC BY 4.0"},
+        "dct:provenance": {"obligation": "R", "type": "dct:ProvenanceStatement", "note": "титуляр-източник + метод на приемане (harvest/snapshot/файл)"},
+        "dcat:distribution": {"obligation": "M", "type": "dcat:Distribution[]"},
+        "healthPortal:disclosureControl": {"obligation": "M", "type": "object", "note": "прилаган контрол на разкриването — виж по-долу"}
+      }
+    },
+    "Distribution": {
+      "rdfType": "dcat:Distribution",
+      "properties": {
+        "dcat:accessURL": {"obligation": "M", "type": "rdfs:Resource", "note": "GET на уникален адрес (МЕ72)"},
+        "dcat:downloadURL": {"obligation": "R", "type": "rdfs:Resource"},
+        "dct:format": {"obligation": "M", "type": "skos:Concept", "vocabulary": "file-type", "note": "CSV, JSON, XLSX, RDF/XML, Turtle"},
+        "dcat:mediaType": {"obligation": "R", "type": "skos:Concept", "vocabulary": "media-type"},
+        "dct:title": {"obligation": "R", "type": "rdf:langString", "langs": ["bg", "en"]},
+        "dct:license": {"obligation": "R", "type": "dct:LicenseDocument"},
+        "dcat:byteSize": {"obligation": "O", "type": "xsd:nonNegativeInteger"},
+        "spdx:checksum": {"obligation": "R", "type": "spdx:Checksum", "note": "SHA-256 на неизменяемия снапшот"},
+        "dct:issued": {"obligation": "R", "type": "xsd:dateTime", "note": "ISO 8601, UTC+2"}
+      }
+    },
+    "DataService": {
+      "rdfType": "dcat:DataService",
+      "note": "публичното четящо API (чл. 41 — API-first)",
+      "properties": {
+        "dct:title": {"obligation": "M", "type": "rdf:langString", "langs": ["bg", "en"]},
+        "dcat:endpointURL": {"obligation": "M", "type": "rdfs:Resource"},
+        "dcat:endpointDescription": {"obligation": "R", "type": "rdfs:Resource", "note": "OpenAPI 3.1 спецификация"},
+        "dcat:servesDataset": {"obligation": "R", "type": "dcat:Dataset[]"},
+        "owl:versionInfo": {"obligation": "M", "type": "xsd:string", "note": "версия на API (напр. v1); поддръжка 24 мес. (чл. 14)"},
+        "dct:license": {"obligation": "R", "type": "dct:LicenseDocument"}
+      }
+    }
+  },
+  "extensions": {
+    "healthPortal:disclosureControl": {
+      "description": "Независим контрол на разкриването, приложен от портала преди публикуване (small-cell suppression).",
+      "properties": {
+        "method": {"type": "string", "enum": ["small-cell-suppression", "aggregation-only", "none"], "obligation": "M"},
+        "minCellSize": {"type": "integer", "note": "минимален размер на клетка (напр. 5); клетки под прага се потискат", "obligation": "R"},
+        "appliedAt": {"type": "xsd:dateTime", "note": "ISO 8601, UTC+2", "obligation": "R"},
+        "notes": {"type": "rdf:langString", "obligation": "O"}
+      }
+    }
+  },
+  "controlledVocabularies": {
+    "data-theme": "http://publications.europa.eu/resource/authority/data-theme (+ HEAL за здраве)",
+    "language": "http://publications.europa.eu/resource/authority/language",
+    "frequency": "http://publications.europa.eu/resource/authority/frequency",
+    "file-type": "http://publications.europa.eu/resource/authority/file-type",
+    "media-type": "https://www.iana.org/assignments/media-types",
+    "access-right": "http://publications.europa.eu/resource/authority/access-right",
+    "nuts": "https://ec.europa.eu/eurostat/web/nuts (BG, BG3, BG4...)",
+    "eurovoc": "http://eurovoc.europa.eu"
+  }
+}

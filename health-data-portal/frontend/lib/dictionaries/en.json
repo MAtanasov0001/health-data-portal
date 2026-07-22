@@ -1,0 +1,67 @@
+{
+  "site": {
+    "name": "Open Health Data Portal",
+    "short": "Open Health Data",
+    "publisher": "Ministry of Innovation and Digital Transformation"
+  },
+  "nav": {
+    "home": "Home",
+    "datasets": "Datasets",
+    "docs": "Technical documentation",
+    "about": "About",
+    "contact": "Contact",
+    "skip": "Skip to main content",
+    "language": "Language"
+  },
+  "home": {
+    "title": "Open health data for Bulgaria",
+    "lead": "Machine-readable, freely accessible and interoperable health datasets. Published as DCAT-AP, with independent disclosure control.",
+    "cta": "Browse datasets",
+    "principlesTitle": "Principles",
+    "principles": [
+      "Public repository from day 1 — transparency by default.",
+      "API-first: every dataset is available programmatically via a stable versioned API.",
+      "Disclosure control: small cells are suppressed to prevent re-identification.",
+      "Interoperability: DCAT-AP and CKAN-compatible harvesting."
+    ]
+  },
+  "datasets": {
+    "title": "Datasets",
+    "lead": "All published datasets. Select one for details, metadata and downloads.",
+    "empty": "No datasets published yet.",
+    "version": "Version",
+    "issued": "Issued",
+    "rows": "Rows",
+    "open": "Open"
+  },
+  "dataset": {
+    "backToList": "Back to datasets",
+    "metadata": "Metadata",
+    "identifier": "Identifier",
+    "publisher": "Publisher",
+    "license": "License",
+    "themes": "Themes",
+    "checksum": "Checksum (SHA-256)",
+    "disclosure": "Disclosure control",
+    "downloads": "Downloads",
+    "apiTitle": "API access",
+    "notFound": "Dataset not found."
+  },
+  "docs": {
+    "title": "Technical documentation",
+    "lead": "How to use the API, the metadata profile and harvesting formats."
+  },
+  "about": {
+    "title": "About the portal",
+    "lead": "A joint inter-institutional open health data initiative, institutionally hosted by MIDT."
+  },
+  "contact": {
+    "title": "Contact",
+    "lead": "Questions, suggestions and reports.",
+    "security": "Security vulnerabilities are disclosed responsibly — see SECURITY.md, not a public issue."
+  },
+  "footer": {
+    "license": "Content is available under open terms. The code is public.",
+    "repo": "Source code"
+  }
+}

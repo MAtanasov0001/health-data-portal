@@ -1,0 +1,28 @@
+# Схема на колоните за валидация при приемане (Pydantic-съвместима).
+# Всяка колона: тип, задължителност и ограничения. Приемането отхвърля файл, който не отговаря.
+columns:
+  - name: oblast_nuts
+    type: string
+    required: true
+    pattern: '^BG[0-9]{3}$'   # NUTS 3 код
+    description: NUTS 3 код на областта
+  - name: oblast
+    type: string
+    required: true
+    description: Име на областта (BG)
+  - name: diagnostична_grupa
+    type: string
+    required: true
+    description: Основна диагностична група
+  - name: broy_hospitalizacii
+    type: count_or_suppressed
+    required: true
+    description: >-
+      Брой хоспитализации. Цяло неотрицателно число ИЛИ маркер за потискане "<5".
+      Клетки под минималния размер се потискат при контрола на разкриването.
+
+# Свойства на набора, важни за контрола на разкриването:
+disclosure:
+  measure_column: broy_hospitalizacii
+  dimension_columns: [oblast_nuts, diagnostична_grupa]
+  min_cell_size: 5

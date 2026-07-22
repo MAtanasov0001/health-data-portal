@@ -1,3 +1,20 @@
+# Dependencies / build artifacts
 node_modules/
-.*
-!.gitignore
+
+# Secrets (never commit real secrets; placeholders like .env.example are allowed)
+.env
+.env.*
+!.env.example
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Agent/workspace tooling and raw uploads (not portal deliverables)
+.claude/
+.uploads/
+
+# NOTE: do not use a broad ".*" here — it silently ignores committed config
+# dotfiles in subprojects (.github/, .gitleaks.toml, .eslintrc.json).
