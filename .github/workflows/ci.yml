@@ -5,9 +5,9 @@ name: CI — блокиращи порти за сигурност и качес
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 permissions:
   contents: read
