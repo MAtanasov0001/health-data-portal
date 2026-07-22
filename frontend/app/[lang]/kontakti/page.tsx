@@ -5,8 +5,9 @@ import { getDictionary } from "@/lib/dictionaries";
 
 export const metadata: Metadata = { title: "Контакти" };
 
-export default function ContactPage({ params }: { params: { lang: string } }) {
-  const lang: Locale = isLocale(params.lang) ? params.lang : i18n.defaultLocale;
+export default async function ContactPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang: rawLang } = await params;
+  const lang: Locale = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
 
   return (

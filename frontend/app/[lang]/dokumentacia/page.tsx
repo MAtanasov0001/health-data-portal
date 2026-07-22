@@ -6,8 +6,9 @@ import { getDictionary } from "@/lib/dictionaries";
 
 export const metadata: Metadata = { title: "Техническа документация" };
 
-export default function DocsPage({ params }: { params: { lang: string } }) {
-  const lang: Locale = isLocale(params.lang) ? params.lang : i18n.defaultLocale;
+export default async function DocsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang: rawLang } = await params;
+  const lang: Locale = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
 
   return (

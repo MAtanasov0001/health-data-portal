@@ -13,9 +13,10 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang = isLocale(params.lang) ? params.lang : i18n.defaultLocale;
+  const { lang: rawLang } = await params;
+  const lang = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
   return {
     title: {
@@ -32,14 +33,15 @@ export async function generateMetadata({
   };
 }
 
-export default function LangLayout({
+export default async function LangLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Locale = isLocale(params.lang) ? params.lang : i18n.defaultLocale;
+  const { lang: rawLang } = await params;
+  const lang: Locale = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
 
   return (

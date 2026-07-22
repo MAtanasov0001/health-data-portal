@@ -11,9 +11,14 @@ interface Params {
   id: string;
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const lang: Locale = isLocale(params.lang) ? params.lang : i18n.defaultLocale;
-  const ds = await getDataset(params.id);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const { lang: rawLang, id } = await params;
+  const lang: Locale = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
+  const ds = await getDataset(id);
   if (!ds) return { title: "404" };
   const title = localizedTitle(ds.title, lang);
   return {
@@ -22,10 +27,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-export default async function DatasetDetailPage({ params }: { params: Params }) {
-  const lang: Locale = isLocale(params.lang) ? params.lang : i18n.defaultLocale;
+export default async function DatasetDetailPage({ params }: { params: Promise<Params> }) {
+  const { lang: rawLang, id } = await params;
+  const lang: Locale = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
-  const ds = await getDataset(params.id);
+  const ds = await getDataset(id);
   if (!ds) notFound();
 
   const title = localizedTitle(ds.title, lang);

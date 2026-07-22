@@ -3,8 +3,9 @@ import Link from "next/link";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
 
-export default function HomePage({ params }: { params: { lang: string } }) {
-  const lang: Locale = isLocale(params.lang) ? params.lang : i18n.defaultLocale;
+export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang: rawLang } = await params;
+  const lang: Locale = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
 
   const jsonLd = {
