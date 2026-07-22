@@ -79,8 +79,10 @@ def list_datasets(
 def _require(repo: Repository, identifier: str, version: str | None) -> DatasetVersion:
     dv = repo.get(identifier, version)
     if dv is None:
-        raise HTTPException(status_code=404, detail=f"Няма набор '{identifier}'"
-                            + (f" версия '{version}'" if version else ""))
+        raise HTTPException(
+            status_code=404,
+            detail=f"Няма набор '{identifier}'" + (f" версия '{version}'" if version else ""),
+        )
     return dv
 
 

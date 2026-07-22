@@ -88,9 +88,12 @@ jobs:
         run: ruff check . && ruff format --check .
       - name: mypy (строга типизация)
         run: |
-          for d in ingestion api; do [ -d "$d" ] && mypy "$d" || true; done
+          for d in ingestion api; do [ -d "$d" ] && mypy "$d"; done
       - name: pytest
-        run: pytest -q
+        run: |
+          # Всеки пакет има свой набор тестове (пакет `tests`); пускаме ги
+          # поотделно, за да няма конфликт на едноименни тестови пакети.
+          for d in ingestion api; do [ -d "$d/tests" ] && (cd "$d" && pytest -q); done
 
   # ---------------------------------------------------------------------------
   # Порта: SAST — статичен анализ на сигурността (Semgrep, OWASP правила).

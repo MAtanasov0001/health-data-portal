@@ -14,4 +14,8 @@ RUN pip install --no-cache-dir .
 ENV OHDP_SNAPSHOTS=/snapshots
 EXPOSE 8000
 
+# Непривилегирован потребител (без root в контейнера).
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
+
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

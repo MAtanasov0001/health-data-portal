@@ -11,9 +11,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-_PROFILE = (
-    Path(__file__).resolve().parents[3] / "spec" / "dcat-ap" / "profile.json"
-)
+_PROFILE = Path(__file__).resolve().parents[3] / "spec" / "dcat-ap" / "profile.json"
 
 
 def _mandatory(profile: dict[str, Any], cls: str) -> list[str]:

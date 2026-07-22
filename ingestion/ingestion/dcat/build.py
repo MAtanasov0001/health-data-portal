@@ -59,9 +59,7 @@ def build_dataset(
                 },
                 "spdx:checksum": {
                     "@type": "spdx:Checksum",
-                    "spdx:algorithm": {
-                        "@id": "http://spdx.org/rdf/terms#checksumAlgorithm_sha256"
-                    },
+                    "spdx:algorithm": {"@id": "http://spdx.org/rdf/terms#checksumAlgorithm_sha256"},
                     "spdx:checksumValue": snapshot.checksum_sha256,
                 },
                 "dct:issued": {"@value": snapshot.created_at, "@type": "xsd:dateTime"},
