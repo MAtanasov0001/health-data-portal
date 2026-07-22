@@ -1,20 +1,62 @@
-# Dependencies / build artifacts
-node_modules/
-
-# Secrets (never commit real secrets; placeholders like .env.example are allowed)
+# --- Тайни: НУЛА тайни в хранилището (публично от ден 1). Сканирането е блокираща CI порта. ---
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+**/secrets/
+*.secret
 
-# OS / editor cruft
-.DS_Store
-Thumbs.db
+# Node / Next.js
+node_modules/
+.next/
+next-env.d.ts
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Данни/снапшоти (не се комитват — генерират се от тръбата)
+/data/
+**/snapshots/
+*.snapshot
+
+# IDE / OS
 .idea/
 .vscode/
+.DS_Store
+Thumbs.db
 
-# Agent/workspace tooling and raw uploads (not portal deliverables)
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!*.tfvars.example
+
+# Docker
+docker-compose.override.yml
+
+# Agent/workspace tooling (OpenKBS staging workspace — not portal deliverables)
 .claude/
 .uploads/
-
-# NOTE: do not use a broad ".*" here — it silently ignores committed config
-# dotfiles in subprojects (.github/, .gitleaks.toml, .eslintrc.json).
