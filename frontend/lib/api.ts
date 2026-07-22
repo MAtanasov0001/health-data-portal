@@ -44,6 +44,56 @@ export function listDatasets(page = 1, pageSize = 20): Promise<DatasetList> {
   return getJson<DatasetList>(`/v1/datasets?page=${page}&page_size=${pageSize}`);
 }
 
+export interface DataRowsPage {
+  identifier: string;
+  version: string;
+  total: number;
+  page: number;
+  page_size: number;
+  rows: Record<string, string | null>[];
+}
+
+/** Пагиниран прозорец от редовете на набора (МЕ90) — за преглед-таблицата. */
+export async function getDatasetRows(
+  identifier: string,
+  page = 1,
+  pageSize = 20,
+): Promise<DataRowsPage | null> {
+  try {
+    return await getJson<DataRowsPage>(
+      `/v1/datasets/${encodeURIComponent(identifier)}/data.json?page=${page}&page_size=${pageSize}`,
+    );
+  } catch {
+    return null;
+  }
+}
+
+export interface SummaryGroup {
+  key: string;
+  value: number;
+  count: number;
+}
+
+export interface Summary {
+  identifier: string;
+  version: string;
+  dimension: string;
+  measure: string;
+  top: number;
+  groups: SummaryGroup[];
+}
+
+/** Агрегат по измерение за визуализацията (по подр. група по първа колона, сума по последна). */
+export async function getSummary(identifier: string, top = 10): Promise<Summary | null> {
+  try {
+    return await getJson<Summary>(
+      `/v1/datasets/${encodeURIComponent(identifier)}/summary?top=${top}`,
+    );
+  } catch {
+    return null;
+  }
+}
+
 export async function getDataset(identifier: string): Promise<DatasetDetail | null> {
   try {
     return await getJson<DatasetDetail>(`/v1/datasets/${encodeURIComponent(identifier)}`);

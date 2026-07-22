@@ -19,18 +19,24 @@ class ColumnSpec(BaseModel):
     """Спецификация на една колона от schema.yaml."""
 
     name: str
-    type: Literal["string", "count", "count_or_suppressed"]
+    type: Literal["string", "count", "count_or_suppressed", "decimal"]
     required: bool = True
     pattern: str | None = None
     description: str | None = None
 
 
 class DisclosureSpec(BaseModel):
-    """Кои колони са мерки/измерения и какъв е минималният размер на клетка."""
+    """Кои колони са мерки/измерения и какъв е минималният размер на клетка.
+
+    ``linked_measures`` са допълнителни мерни колони (напр. „брой случаи"), които се потискат
+    в синхрон с основната мярка: щом клетка се потисне по ``measure_column``, свързаните мерки
+    за същия ред също се скриват, за да не издават потиснатата стойност.
+    """
 
     measure_column: str
     dimension_columns: list[str]
     min_cell_size: int = Field(ge=1)
+    linked_measures: list[str] = Field(default_factory=list)
 
 
 class DatasetSchema(BaseModel):
@@ -145,4 +151,12 @@ def _coerce(raw: str, col: ColumnSpec, *, row_no: int) -> Any:
         if value < 0:
             raise SchemaValidationError(f"Ред {row_no}: '{col.name}' е отрицателно")
         return value
+    if col.type == "decimal":
+        try:
+            number = float(raw.replace(",", "."))
+        except ValueError as exc:
+            raise SchemaValidationError(f"Ред {row_no}: '{col.name}'='{raw}' не е число") from exc
+        if number < 0:
+            raise SchemaValidationError(f"Ред {row_no}: '{col.name}' е отрицателно")
+        return number
     raise SchemaValidationError(f"Непознат тип колона: {col.type}")

@@ -122,22 +122,86 @@ def list_versions(identifier: str, repo: Repository = Depends(get_repo)) -> dict
 def data_csv(
     identifier: str,
     version: str | None = Query(None),
+    page: int | None = Query(None, ge=1, description="Страница; без нея се връща целият файл"),
+    page_size: int = Query(1000, ge=1, le=10000, description="Размер на страница (макс. 10000)"),
     repo: Repository = Depends(get_repo),
 ) -> Response:
     dv = _require(repo, identifier, version)
-    return PlainTextResponse(dv.data_csv(), media_type="text/csv; charset=utf-8")
+    if page is None:  # пълен обемен файл (CSV дистрибуцията по DCAT е целият набор)
+        return PlainTextResponse(
+            dv.data_csv(),
+            media_type="text/csv; charset=utf-8",
+            headers={"X-Total-Count": str(dv.row_count)},
+        )
+    header, window = dv.data_page((page - 1) * page_size, page_size)
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(header)
+    writer.writerows(window)
+    return PlainTextResponse(
+        buf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "X-Total-Count": str(dv.row_count),
+            "X-Page": str(page),
+            "X-Page-Size": str(page_size),
+        },
+    )
 
 
 @app.get("/v1/datasets/{identifier}/data.json", tags=["данни"])
 def data_json(
     identifier: str,
     version: str | None = Query(None),
+    page: int = Query(1, ge=1, description="Номер на страница (МЕ90)"),
+    page_size: int = Query(100, ge=1, le=1000, description="Размер на страница (макс. 1000)"),
     repo: Repository = Depends(get_repo),
 ) -> dict[str, Any]:
     dv = _require(repo, identifier, version)
-    reader = csv.DictReader(io.StringIO(dv.data_csv()))
-    rows = [{k: (None if v == "" else v) for k, v in row.items()} for row in reader]
-    return {"identifier": dv.identifier, "version": dv.version, "rows": rows}
+    header, window = dv.data_page((page - 1) * page_size, page_size)
+    rows = [
+        {k: (None if v == "" else v) for k, v in zip(header, values, strict=False)}
+        for values in window
+    ]
+    return {
+        "identifier": dv.identifier,
+        "version": dv.version,
+        "total": dv.row_count,
+        "page": page,
+        "page_size": page_size,
+        "rows": rows,
+    }
+
+
+@app.get(
+    "/v1/datasets/{identifier}/summary",
+    tags=["данни"],
+    summary="Агрегат по измерение (за визуализация)",
+)
+def data_summary(
+    identifier: str,
+    dimension: str | None = Query(None, description="Категорийна колона; по подр. първата"),
+    measure: str | None = Query(None, description="Числова колона; по подр. последната"),
+    top: int = Query(10, ge=1, le=50, description="Брой групи (топ по стойност)"),
+    version: str | None = Query(None),
+    repo: Repository = Depends(get_repo),
+) -> dict[str, Any]:
+    dv = _require(repo, identifier, version)
+    columns: list[str] = dv.manifest["columns"]
+    dim = dimension or columns[0]
+    mea = measure or columns[-1]
+    for name in (dim, mea):
+        if name not in columns:
+            raise HTTPException(status_code=400, detail=f"Няма колона '{name}' в набора")
+    groups = dv.aggregate(dim, mea, top)
+    return {
+        "identifier": dv.identifier,
+        "version": dv.version,
+        "dimension": dim,
+        "measure": mea,
+        "top": top,
+        "groups": [{"key": k, "value": v, "count": c} for k, v, c in groups],
+    }
 
 
 @app.get("/v1/catalog.jsonld", tags=["интероперативност"], summary="DCAT-AP каталог (JSON-LD)")

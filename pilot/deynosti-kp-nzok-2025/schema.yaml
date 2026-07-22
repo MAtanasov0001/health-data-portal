@@ -1,0 +1,44 @@
+# Схема на набора „Дейности по клинични пътеки/процедури (НЗОК), 2025".
+# Годишен агрегат от 12 месечни експорта на НЗОК. Всяка колона се валидира при приемане;
+# файл, който не отговаря, се отхвърля изцяло.
+columns:
+  - name: rzok
+    type: string
+    required: true
+    description: РЗОК (районна здравноосигурителна каса) — код + канонично име
+  - name: lzbp
+    type: string
+    required: true
+    description: Име на лечебното заведение за болнична помощ (ЛЗБП)
+  - name: kp_apr_kpr
+    type: string
+    required: true
+    description: Код на клинична пътека / амбулаторна процедура / клинична процедура
+  - name: dg_osnovna
+    type: string
+    required: false
+    description: Основна диагноза (МКБ-10); в редки случаи може да липсва
+  - name: dg_vtorichna
+    type: string
+    required: false
+    description: Вторична (придружаваща) диагноза (МКБ-10); може да липсва
+  - name: broy_zol
+    type: count_or_suppressed
+    required: true
+    description: >-
+      Брой здравноосигурени лица (уникални пациенти). Основна мярка за контрола на
+      разкриването — клетки под минималния размер се потискат.
+  - name: broy_sluchai
+    type: count_or_suppressed
+    required: true
+    description: >-
+      Брой случаи (хоспитализации/процедури). Свързана мярка — скрива се синхронно, когато
+      броят ЗОЛ за същата клетка е потиснат.
+
+# Контрол на разкриването: потискаме по брой ЗОЛ (реидентификационно обвързващата мярка);
+# броят случаи се скрива синхронно за същите клетки.
+disclosure:
+  measure_column: broy_zol
+  dimension_columns: [rzok, lzbp, kp_apr_kpr, dg_osnovna, dg_vtorichna]
+  min_cell_size: 5
+  linked_measures: [broy_sluchai]

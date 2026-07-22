@@ -41,6 +41,12 @@ htmlcov/
 **/snapshots/
 *.snapshot
 
+# Реални титулярски експорти и производният ПРЕДИ-потискане source.csv: НЕ се комитват в
+# публичното репо — съдържат малките клетки, които контролът на разкриването потиска.
+# Комитват се само spec-файловете (schema.yaml, metadata.yaml). Виж pilot/README.md.
+pilot/deynosti-kp-nzok-2025/source.csv
+pilot/deynosti-lekarstva-nzok-2025/source.csv
+
 # IDE / OS
 .idea/
 .vscode/

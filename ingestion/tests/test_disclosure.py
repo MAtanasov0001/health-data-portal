@@ -54,3 +54,23 @@ def test_input_not_mutated():
     rows = [_row("A", "y", 3)]
     disclosure.apply(rows, _spec())
     assert rows[0]["n"] == 3
+
+
+def test_linked_measure_hidden_with_primary():
+    # Свързаната мярка се скрива синхронно с потиснатата основна мярка.
+    spec = DisclosureSpec(
+        measure_column="n",
+        dimension_columns=["region", "group"],
+        min_cell_size=5,
+        linked_measures=["cases"],
+    )
+    rows = [
+        {"region": "A", "group": "x", "n": 3, "cases": 40},
+        {"region": "B", "group": "y", "n": 20, "cases": 50},
+    ]
+    out, report = disclosure.apply(rows, spec)
+    assert report.primary_suppressed == 1
+    assert out[0]["n"] is None
+    assert out[0]["cases"] is None  # свързаната мярка също е скрита
+    assert out[1]["n"] == 20
+    assert out[1]["cases"] == 50

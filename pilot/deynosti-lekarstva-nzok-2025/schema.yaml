@@ -1,0 +1,84 @@
+# Схема на набора „Болнични лекарства (НЗОК) — противотуморни и за вродени коагулопатии, 2025".
+# Годишен агрегат от 12 месечни експорта на НЗОК („Справка 5 — ПЛС2", формат .xls). Всяка
+# колона се валидира при приемане; файл, който не отговаря, се отхвърля изцяло.
+columns:
+  - name: rzok
+    type: string
+    required: true
+    description: РЗОК (районна здравноосигурителна каса) — код + канонично име (от РЦЗ кода)
+  - name: lz_kod
+    type: string
+    required: true
+    description: РЦЗ — регистрационен код на лечебното заведение
+  - name: lz_ime
+    type: string
+    required: true
+    description: Наименование на лечебното заведение
+  - name: atc
+    type: string
+    required: true
+    description: ATC код на лекарствения продукт
+  - name: inn
+    type: string
+    required: true
+    description: Международно непатентно наименование (INN)
+  - name: nacionalen_nomer
+    type: string
+    required: false
+    description: Национален номер на продукта; в редки случаи може да липсва
+  - name: nzok_kod
+    type: string
+    required: true
+    description: НЗОК код на лекарствения продукт
+  - name: produkt
+    type: string
+    required: true
+    description: Търговско наименование на продукта
+  - name: forma
+    type: string
+    required: true
+    description: Лекарствена форма
+  - name: kolichestvo
+    type: string
+    required: false
+    description: Количество на лекарственото вещество (напр. „150 mcg/0,3 ml")
+  - name: broy_v_opakovka
+    type: string
+    required: false
+    description: Брой в опаковка
+  - name: mkb
+    type: string
+    required: false
+    description: МКБ код на заболяването (МКБ-10); в редки случаи може да липсва
+  - name: zabolyavane
+    type: string
+    required: false
+    description: Наименование на заболяването
+  - name: broy_zol
+    type: count_or_suppressed
+    required: true
+    description: >-
+      Брой здравноосигурени лица (уникални пациенти). Основна мярка за контрола на
+      разкриването — клетки под минималния размер се потискат.
+  - name: opakovki
+    type: decimal
+    required: true
+    description: >-
+      Брой отпуснати опаковки (може да е дробно число). Свързана мярка — скрива се синхронно,
+      когато броят ЗОЛ за същата клетка е потиснат.
+  - name: reimbursna_suma
+    type: decimal
+    required: true
+    description: >-
+      Реимбурсна сума (лв.), заплатена от НЗОК. Свързана мярка — скрива се синхронно, когато
+      броят ЗОЛ за същата клетка е потиснат.
+
+# Контрол на разкриването: потискаме по брой ЗОЛ (реидентификационно обвързващата мярка);
+# броят опаковки и реимбурсната сума се скриват синхронно за същите клетки, защото при малка
+# кохорта биха издавали потиснатата стойност.
+disclosure:
+  measure_column: broy_zol
+  dimension_columns:
+    [rzok, lz_kod, lz_ime, atc, inn, nacionalen_nomer, nzok_kod, produkt, forma, kolichestvo, broy_v_opakovka, mkb, zabolyavane]
+  min_cell_size: 5
+  linked_measures: [opakovki, reimbursna_suma]

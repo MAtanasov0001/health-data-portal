@@ -1,0 +1,42 @@
+# Метаданни на набора — попълват DCAT-AP профила (spec/dcat-ap/profile.json).
+identifier: deynosti-kp-nzok-2025
+title:
+  bg: Дейности по клинични пътеки и процедури (НЗОК), 2025
+  en: Clinical pathway and procedure activity (NHIF), 2025
+description:
+  bg: >-
+    Годишен агрегат на отчетените дейности по клинични пътеки, амбулаторни и клинични
+    процедури за 2025 г. по РЗОК, лечебно заведение, основна и вторична диагноза (МКБ-10).
+    За всяка клетка се публикуват брой здравноосигурени лица (ЗОЛ) и брой случаи. Клетки под
+    праг са потиснати чрез независим контрол на разкриването (small-cell suppression).
+  en: >-
+    Annual aggregate of reported activity under clinical pathways, ambulatory and clinical
+    procedures for 2025 by regional health fund, medical establishment, and primary/secondary
+    diagnosis (ICD-10). Each cell publishes the number of insured persons and the number of
+    cases. Cells below threshold are suppressed via independent disclosure control.
+publisher: Министерство на иновациите и дигиталната трансформация (МИДТ)
+contact_email: data@health.egov.bg
+theme:
+  - HEAL
+keyword:
+  bg: [клинични пътеки, болници, диагнози, НЗОК, хоспитализации]
+  en: [clinical pathways, hospitals, diagnoses, NHIF]
+accrual_periodicity: ANNUAL
+spatial: [BG]
+temporal:
+  start: '2025-01-01'
+  end: '2025-12-31'
+access_rights: PUBLIC
+license: CC-BY-4.0
+provenance:
+  bg: >-
+    Източник: Национална здравноосигурителна каса (НЗОК) — месечни експорти „Брой случаи и
+    брой ЗОЛ по КП/АПр/КПр с основна и допълнителна диагноза" (Диагноза България). Метод на
+    приемане: файлово подаване (12 месечни .xlsx → годишен агрегат). Порталът прилага
+    независим контрол на разкриването преди публикуване.
+  en: >-
+    Source: National Health Insurance Fund (NHIF) monthly exports of cases and insured persons
+    by clinical pathway/procedure with primary and secondary diagnosis (Diagnoza Bulgaria).
+    Ingested via file submission (12 monthly .xlsx aggregated to annual). The portal applies
+    independent disclosure control before publication.
+version: 1.0.0

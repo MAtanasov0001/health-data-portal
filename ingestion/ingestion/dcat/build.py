@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from ..disclosure import DisclosureReport
 from ..models import DatasetMetadata
 from ..snapshot import Snapshot
 
-BASE = "https://data.health.egov.bg"
+# Каноничният домейн на портала. Конфигурируем чрез ``OHDP_BASE_URL`` (същата променлива като в
+# публичното API), за да не е зашит хостът в снапшотите — DCAT @id/URL следват средата (чл. 16:
+# без обвързване с доставчик/домейн). По подразбиране — продукционният домейн на портала.
+BASE = os.environ.get("OHDP_BASE_URL", "https://data.health.egov.bg").rstrip("/")
 THEME_BASE = "http://publications.europa.eu/resource/authority/data-theme/"
 FREQ_BASE = "http://publications.europa.eu/resource/authority/frequency/"
 ACCESS_BASE = "http://publications.europa.eu/resource/authority/access-right/"

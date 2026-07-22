@@ -1,0 +1,46 @@
+# Метаданни на набора — попълват DCAT-AP профила (spec/dcat-ap/profile.json).
+identifier: deynosti-lekarstva-nzok-2025
+title:
+  bg: Болнични лекарства извън КП/АПр (НЗОК), 2025
+  en: Hospital drugs outside clinical pathways (NHIF), 2025
+description:
+  bg: >-
+    Годишен агрегат на разходите и броя болни за противотуморни лекарствени продукти и
+    продукти за вродени коагулопатии, заплащани от НЗОК извън стойността на клиничните пътеки
+    и амбулаторните процедури, за 2025 г. По РЗОК, лечебно заведение, лекарствен продукт (ATC,
+    INN, търговско наименование, форма) и МКБ код на заболяването. За всяка клетка се
+    публикуват брой здравноосигурени лица (ЗОЛ), брой опаковки и реимбурсна сума. Клетки под
+    праг са потиснати чрез независим контрол на разкриването (small-cell suppression).
+  en: >-
+    Annual aggregate of spending and patient counts for antitumour medicinal products and
+    products for congenital coagulopathies, paid by the NHIF outside the value of clinical
+    pathways and ambulatory procedures, for 2025. By regional health fund, medical
+    establishment, medicinal product (ATC, INN, trade name, form) and disease ICD code. Each
+    cell publishes the number of insured persons, packages dispensed and reimbursement amount.
+    Cells below threshold are suppressed via independent disclosure control.
+publisher: Министерство на иновациите и дигиталната трансформация (МИДТ)
+contact_email: data@health.egov.bg
+theme:
+  - HEAL
+keyword:
+  bg: [лекарства, онкология, реимбурсиране, НЗОК, болници, ATC]
+  en: [medicines, oncology, reimbursement, NHIF, hospitals, ATC]
+accrual_periodicity: ANNUAL
+spatial: [BG]
+temporal:
+  start: '2025-01-01'
+  end: '2025-12-31'
+access_rights: PUBLIC
+license: CC-BY-4.0
+provenance:
+  bg: >-
+    Източник: Национална здравноосигурителна каса (НЗОК) — месечни експорти „Справка 5 —
+    ПЛС2: разходи и брой болни за противотуморни лекарствени продукти и продукти за вродени
+    коагулопатии" (Диагноза България). Метод на приемане: файлово подаване (12 месечни .xls →
+    годишен агрегат). Порталът прилага независим контрол на разкриването преди публикуване.
+  en: >-
+    Source: National Health Insurance Fund (NHIF) monthly exports "Report 5 — PLS2: spending
+    and patient counts for antitumour products and products for congenital coagulopathies"
+    (Diagnoza Bulgaria). Ingested via file submission (12 monthly .xls aggregated to annual).
+    The portal applies independent disclosure control before publication.
+version: 1.0.0

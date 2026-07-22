@@ -73,6 +73,8 @@ def apply(
 
     for idx in suppressed:
         out[idx][measure] = None
+        for linked in spec.linked_measures:
+            out[idx][linked] = None
         label = " / ".join(str(out[idx][d]) for d in spec.dimension_columns)
         report.suppressed_keys.append(label)
 

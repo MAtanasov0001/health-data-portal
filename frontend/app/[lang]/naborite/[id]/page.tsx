@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { API_BASE, getDataset, localizedTitle } from "@/lib/api";
+import BarChart from "@/components/BarChart";
+import { API_BASE, getDataset, getDatasetRows, getSummary, localizedTitle } from "@/lib/api";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
 
@@ -10,6 +11,8 @@ interface Params {
   lang: string;
   id: string;
 }
+
+const PAGE_SIZE = 20;
 
 export async function generateMetadata({
   params,
@@ -27,12 +30,28 @@ export async function generateMetadata({
   };
 }
 
-export default async function DatasetDetailPage({ params }: { params: Promise<Params> }) {
+export default async function DatasetDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams: Promise<{ page?: string }>;
+}) {
   const { lang: rawLang, id } = await params;
   const lang: Locale = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
   const ds = await getDataset(id);
   if (!ds) notFound();
+
+  const sp = await searchParams;
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const [rowsPage, summary] = await Promise.all([
+    getDatasetRows(id, page, PAGE_SIZE),
+    getSummary(id, 10),
+  ]);
+
+  const colLabels = dict.columnLabels as Record<string, string>;
+  const label = (col: string): string => colLabels[col] ?? col;
 
   const title = localizedTitle(ds.title, lang);
   const disclosure = (ds.dcat["healthPortal:disclosureControl"] ?? {}) as Record<string, unknown>;
@@ -82,6 +101,68 @@ export default async function DatasetDetailPage({ params }: { params: Promise<Pa
           {disclosure.minCellSize ? ` (min ${String(disclosure.minCellSize)})` : ""}
         </dd>
       </dl>
+
+      {summary && summary.groups.length > 0 && (
+        <section aria-labelledby="chart-heading">
+          <h2 id="chart-heading">{dict.dataset.chartTitle}</h2>
+          <p className="meta">
+            {dict.dataset.chartTop}: {label(summary.dimension)} · {label(summary.measure)}
+          </p>
+          <BarChart
+            groups={summary.groups}
+            title={`${label(summary.measure)} — ${label(summary.dimension)}`}
+            valueLabel={label(summary.measure)}
+          />
+        </section>
+      )}
+
+      {rowsPage && rowsPage.rows.length > 0 && (
+        <section aria-labelledby="preview-heading">
+          <h2 id="preview-heading">{dict.dataset.preview}</h2>
+          <div className="table-scroll" tabIndex={0} role="region" aria-label={dict.dataset.preview}>
+            <table className="data">
+              <thead>
+                <tr>
+                  {Object.keys(rowsPage.rows[0]).map((col) => (
+                    <th key={col} scope="col">
+                      {label(col)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rowsPage.rows.map((row, i) => (
+                  <tr key={i}>
+                    {Object.keys(rowsPage.rows[0]).map((col) => (
+                      <td key={col}>{row[col] ?? "—"}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <nav className="pager" aria-label={dict.dataset.pagination}>
+            {page > 1 ? (
+              <Link rel="prev" href={`?page=${page - 1}`}>
+                ← {dict.dataset.prev}
+              </Link>
+            ) : (
+              <span aria-disabled="true">← {dict.dataset.prev}</span>
+            )}
+            <span className="meta">
+              {dict.dataset.page} {page} / {Math.max(1, Math.ceil(rowsPage.total / PAGE_SIZE))} ·{" "}
+              {rowsPage.total} {dict.datasets.rows.toLowerCase()}
+            </span>
+            {page < Math.ceil(rowsPage.total / PAGE_SIZE) ? (
+              <Link rel="next" href={`?page=${page + 1}`}>
+                {dict.dataset.next} →
+              </Link>
+            ) : (
+              <span aria-disabled="true">{dict.dataset.next} →</span>
+            )}
+          </nav>
+        </section>
+      )}
 
       <h2>{dict.dataset.downloads}</h2>
       <ul>

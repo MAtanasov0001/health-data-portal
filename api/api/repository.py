@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import csv
+import itertools
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +33,43 @@ class DatasetVersion:
 
     def data_csv(self) -> str:
         return (self.path / "data.csv").read_text(encoding="utf-8")
+
+    def data_page(self, offset: int, limit: int) -> tuple[list[str], list[list[str]]]:
+        """Чете хедъра + прозорец от ``limit`` реда след ``offset`` без да зарежда целия файл.
+
+        Пропуснатите редове се итерират, но не се материализират — памет-леко за големи набори
+        (напр. ~593 хил. реда), за да е практична пагинацията (МЕ90) към frontend/харвестъри.
+        """
+        with (self.path / "data.csv").open(encoding="utf-8", newline="") as fh:
+            reader = csv.reader(fh)
+            header = next(reader, [])
+            window = list(itertools.islice(reader, offset, offset + limit))
+        return header, window
+
+    def aggregate(self, dimension: str, measure: str, top: int) -> list[tuple[str, float, int]]:
+        """Групира по ``dimension`` и сумира числовата ``measure``; връща топ-``top`` групи.
+
+        Потиснатите клетки (празни) и нечисловите стойности се пропускат — агрегатът е върху
+        вече контролираните данни, затова е безопасен за публична визуализация.
+        """
+        with (self.path / "data.csv").open(encoding="utf-8", newline="") as fh:
+            reader = csv.reader(fh)
+            header = next(reader, [])
+            di, mi = header.index(dimension), header.index(measure)
+            sums: dict[str, float] = {}
+            counts: dict[str, int] = {}
+            for row in reader:
+                if di >= len(row) or mi >= len(row) or row[mi] == "":
+                    continue
+                try:
+                    val = float(row[mi])
+                except ValueError:
+                    continue
+                key = row[di]
+                sums[key] = sums.get(key, 0.0) + val
+                counts[key] = counts.get(key, 0) + 1
+        ranked = sorted(sums, key=lambda k: sums[k], reverse=True)[:top]
+        return [(k, sums[k], counts[k]) for k in ranked]
 
 
 def _semver_key(version: str) -> tuple[int, ...]:
