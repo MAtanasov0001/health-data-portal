@@ -51,7 +51,9 @@ def build_dataset(
                 "@type": "dcat:Distribution",
                 "@id": f"{ds_uri}/csv",
                 "dcat:accessURL": {"@id": f"{ds_uri}/csv"},
-                "dcat:downloadURL": {"@id": f"{BASE}/api/v1/datasets/{metadata.identifier}/data.csv"},
+                "dcat:downloadURL": {
+                    "@id": f"{BASE}/api/v1/datasets/{metadata.identifier}/data.csv"
+                },
                 "dct:format": {
                     "@id": "http://publications.europa.eu/resource/authority/file-type/CSV"
                 },

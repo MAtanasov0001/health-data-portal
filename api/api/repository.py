@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from functools import cmp_to_key
 from pathlib import Path
 from typing import Any
 
@@ -92,5 +91,5 @@ class Repository:
     def list_latest(self) -> list[DatasetVersion]:
         result = [self.latest(i) for i in self.identifiers()]
         items = [dv for dv in result if dv is not None]
-        items.sort(key=cmp_to_key(lambda a, b: (a.identifier > b.identifier) - (a.identifier < b.identifier)))
+        items.sort(key=lambda dv: dv.identifier)
         return items

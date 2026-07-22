@@ -34,6 +34,19 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+# FastAPI-специфично: извикванията в подразбиращите се стойности са част от
+# рамката (dependency injection), не са грешка B008.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Header",
+    "fastapi.Body",
+    "fastapi.Cookie",
+    "fastapi.Form",
+]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

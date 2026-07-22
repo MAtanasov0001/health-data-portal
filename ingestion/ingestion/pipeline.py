@@ -62,7 +62,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ohdp-ingest", description="Приемна тръба на портала")
     sub = parser.add_subparsers(dest="cmd", required=True)
     run_p = sub.add_parser("run", help="Пусни набор през тръбата")
-    run_p.add_argument("dataset_dir", type=Path, help="Директория с source.csv/metadata.yaml/schema.yaml")
+    run_p.add_argument(
+        "dataset_dir",
+        type=Path,
+        help="Директория с source.csv/metadata.yaml/schema.yaml",
+    )
     run_p.add_argument(
         "--out",
         type=Path,
