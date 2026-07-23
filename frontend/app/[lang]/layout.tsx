@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 
 import "@/app/globals.css";
+import AccessibilityWidget from "@/components/AccessibilityWidget";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
@@ -50,6 +52,12 @@ export default async function LangLayout({
 
   return (
     <html lang={lang}>
+      <head>
+        {/* Зарежда се като статичен файл (не bundle-ва се), за да се запазят относителните
+            url() пътища към шрифта/иконите в /assets/accessibility/. */}
+        {/* eslint-disable-next-line @next/next/no-css-tags */}
+        <link rel="stylesheet" href="/assets/accessibility/accessibility.css" />
+      </head>
       <body>
         <a className="skip-link" href="#main">
           {dict.nav.skip}
@@ -59,6 +67,8 @@ export default async function LangLayout({
           {children}
         </main>
         <SiteFooter lang={lang} dict={dict} />
+        <Script src="/assets/accessibility/accessibility.js" strategy="afterInteractive" />
+        <AccessibilityWidget lang={lang} />
       </body>
     </html>
   );
