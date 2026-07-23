@@ -16,12 +16,51 @@ BASE = os.environ.get("OHDP_BASE_URL", "https://data.health.egov.bg").rstrip("/"
 THEME_BASE = "http://publications.europa.eu/resource/authority/data-theme/"
 FREQ_BASE = "http://publications.europa.eu/resource/authority/frequency/"
 ACCESS_BASE = "http://publications.europa.eu/resource/authority/access-right/"
+FILE_TYPE_BASE = "http://publications.europa.eu/resource/authority/file-type/"
 NUTS_BASE = "http://data.europa.eu/nuts/code/"
 LICENSE_URI = {"CC-BY-4.0": "http://creativecommons.org/licenses/by/4.0/"}
+
+# Дистрибуции по МЕ34 (експорт в няколко формата). CSV носи контролната сума на снапшота;
+# останалите формати се произвеждат от API-то при поискване (същите данни, различен пренос).
+_DISTRIBUTIONS = [
+    ("data.csv", "CSV", "text/csv", True),
+    ("data.json", "JSON", "application/json", False),
+    (
+        "data.xlsx",
+        "XLSX",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        False,
+    ),
+    ("dcat.ttl", "RDF_TURTLE", "text/turtle", False),
+]
 
 
 def _lang_list(values: dict[str, str]) -> list[dict[str, str]]:
     return [{"@value": v, "@language": lang} for lang, v in values.items()]
+
+
+def _distributions(identifier: str, snapshot: Snapshot) -> list[dict[str, Any]]:
+    api = f"{BASE}/api/v1/datasets/{identifier}"
+    ds_uri = f"{BASE}/dataset/{identifier}"
+    out: list[dict[str, Any]] = []
+    for path, ftype, media, with_checksum in _DISTRIBUTIONS:
+        dist: dict[str, Any] = {
+            "@type": "dcat:Distribution",
+            "@id": f"{ds_uri}/{ftype.lower()}",
+            "dcat:accessURL": {"@id": f"{api}/{path}"},
+            "dcat:downloadURL": {"@id": f"{api}/{path}"},
+            "dcat:mediaType": media,
+            "dct:format": {"@id": FILE_TYPE_BASE + ftype},
+            "dct:issued": {"@value": snapshot.created_at, "@type": "xsd:dateTime"},
+        }
+        if with_checksum:
+            dist["spdx:checksum"] = {
+                "@type": "spdx:Checksum",
+                "spdx:algorithm": {"@id": "http://spdx.org/rdf/terms#checksumAlgorithm_sha256"},
+                "spdx:checksumValue": snapshot.checksum_sha256,
+            }
+        out.append(dist)
+    return out
 
 
 def build_dataset(
@@ -50,25 +89,7 @@ def build_dataset(
             "minCellSize": disclosure.min_cell_size,
             "appliedAt": snapshot.created_at,
         },
-        "dcat:distribution": [
-            {
-                "@type": "dcat:Distribution",
-                "@id": f"{ds_uri}/csv",
-                "dcat:accessURL": {"@id": f"{ds_uri}/csv"},
-                "dcat:downloadURL": {
-                    "@id": f"{BASE}/api/v1/datasets/{metadata.identifier}/data.csv"
-                },
-                "dct:format": {
-                    "@id": "http://publications.europa.eu/resource/authority/file-type/CSV"
-                },
-                "spdx:checksum": {
-                    "@type": "spdx:Checksum",
-                    "spdx:algorithm": {"@id": "http://spdx.org/rdf/terms#checksumAlgorithm_sha256"},
-                    "spdx:checksumValue": snapshot.checksum_sha256,
-                },
-                "dct:issued": {"@value": snapshot.created_at, "@type": "xsd:dateTime"},
-            }
-        ],
+        "dcat:distribution": _distributions(metadata.identifier, snapshot),
     }
     if metadata.spatial:
         record["dct:spatial"] = [{"@id": NUTS_BASE + s} for s in metadata.spatial]

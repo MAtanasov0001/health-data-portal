@@ -9,6 +9,7 @@ from __future__ import annotations
 import csv
 import itertools
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,11 @@ class DatasetVersion:
             header = next(reader, [])
             window = list(itertools.islice(reader, offset, offset + limit))
         return header, window
+
+    def iter_data(self) -> Iterator[list[str]]:
+        """Итерира редовете на снапшота (пръв ред = хедър) поточно, за пълен експорт (XLSX)."""
+        with (self.path / "data.csv").open(encoding="utf-8", newline="") as fh:
+            yield from csv.reader(fh)
 
     def aggregate(self, dimension: str, measure: str, top: int) -> list[tuple[str, float, int]]:
         """Групира по ``dimension`` и сумира числовата ``measure``; връща топ-``top`` групи.

@@ -95,3 +95,55 @@ def test_catalog_jsonld(client: TestClient):
     r = client.get("/v1/catalog.jsonld")
     assert r.headers["content-type"].startswith("application/ld+json")
     assert len(r.json()["dcat:dataset"]) == 2
+
+
+def test_dataset_detail_lists_all_formats(client: TestClient):
+    dists = client.get("/v1/datasets/alpha").json()["distributions"]
+    assert set(dists) == {"csv", "json", "xlsx", "rdf"}
+
+
+def test_data_xlsx_is_a_valid_zip(client: TestClient):
+    import io
+    import zipfile
+
+    r = client.get("/v1/datasets/alpha/data.xlsx")
+    assert r.headers["content-type"].startswith(main.XLSX_MEDIA_TYPE)
+    assert r.headers["X-Total-Count"] == "2"
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
+        names = zf.namelist()
+        assert "xl/worksheets/sheet1.xml" in names
+        sheet = zf.read("xl/worksheets/sheet1.xml").decode("utf-8")
+    assert "<v>10</v>" in sheet  # числовата клетка е записана като число
+    assert "BG411" in sheet
+
+
+def test_dataset_turtle_via_accept(client: TestClient):
+    r = client.get("/v1/datasets/alpha", headers={"Accept": "text/turtle"})
+    assert r.headers["content-type"].startswith("text/turtle")
+    assert "@prefix dcat:" in r.text
+    assert "a dcat:Dataset" in r.text
+
+
+def test_dataset_jsonld_via_accept(client: TestClient):
+    r = client.get("/v1/datasets/alpha", headers={"Accept": "application/ld+json"})
+    assert r.headers["content-type"].startswith("application/ld+json")
+    assert r.json()["@type"] == "dcat:Dataset"
+
+
+def test_dataset_ttl_endpoint(client: TestClient):
+    r = client.get("/v1/datasets/alpha/dcat.ttl")
+    assert r.headers["content-type"].startswith("text/turtle")
+    assert "dcat:distribution" in r.text
+
+
+def test_data_negotiation_csv(client: TestClient):
+    r = client.get("/v1/datasets/alpha/data", headers={"Accept": "text/csv"})
+    assert r.headers["content-type"].startswith("text/csv")
+    assert r.text.splitlines()[0] == "region,n"
+
+
+def test_catalog_ttl(client: TestClient):
+    r = client.get("/v1/catalog.ttl")
+    assert r.headers["content-type"].startswith("text/turtle")
+    assert "a dcat:Catalog" in r.text
+    assert r.text.count("a dcat:Dataset") == 2

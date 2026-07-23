@@ -16,10 +16,15 @@ import os
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response
 from fastapi.responses import JSONResponse, PlainTextResponse
 
+from . import formats
 from .repository import DatasetVersion, Repository
+
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+TURTLE_MEDIA_TYPE = "text/turtle; charset=utf-8"
+JSONLD_MEDIA_TYPE = "application/ld+json"
 
 app = FastAPI(
     title="Портал за отворени данни в здравеопазването — публично API",
@@ -51,6 +56,57 @@ def _summary(dv: DatasetVersion) -> dict[str, Any]:
         "row_count": dv.row_count,
         "themes": [t["@id"].rsplit("/", 1)[-1] for t in dcat.get("dcat:theme", [])],
     }
+
+
+def _distributions(dv: DatasetVersion) -> dict[str, str]:
+    """Публичните дистрибуции на набора — по един уникален GET адрес на формат (МЕ34/МЕ72)."""
+    base = f"{BASE_URL}/v1/datasets/{dv.identifier}"
+    return {
+        "csv": f"{base}/data.csv",
+        "json": f"{base}/data.json",
+        "xlsx": f"{base}/data.xlsx",
+        "rdf": f"{base}/dcat.ttl",
+    }
+
+
+# file-type речник (Publications Office) за DCAT дистрибуциите
+_FILE_TYPE = "http://publications.europa.eu/resource/authority/file-type/"
+_DIST_FORMATS = [
+    ("data.csv", "CSV", "text/csv"),
+    ("data.json", "JSON", "application/json"),
+    ("data.xlsx", "XLSX", XLSX_MEDIA_TYPE),
+    ("dcat.ttl", "RDF_TURTLE", "text/turtle"),
+]
+
+
+def _enrich_dcat(dv: DatasetVersion) -> dict[str, Any]:
+    """Връща DCAT записа от снапшота, допълнен с дистрибуции за всички формати (МЕ34).
+
+    Снапшотите са неизменяеми и носят само CSV дистрибуцията от момента на приемане; API-то е
+    презентационният слой и добавя останалите формати при поднасяне, без да пипа снапшота.
+    """
+    dcat = dict(dv.dcat)
+    ds_uri = f"{BASE_URL}/api/v1/datasets/{dv.identifier}"
+    existing = dcat.get("dcat:distribution", [])
+    present = {d.get("dct:format", {}).get("@id", "") for d in existing if isinstance(d, dict)}
+    extra: list[dict[str, Any]] = []
+    for path, ftype, media in _DIST_FORMATS:
+        fid = _FILE_TYPE + ftype
+        if fid in present:
+            continue
+        extra.append(
+            {
+                "@type": "dcat:Distribution",
+                "@id": f"{ds_uri}/{path}",
+                "dcat:accessURL": {"@id": f"{ds_uri}/{path}"},
+                "dcat:downloadURL": {"@id": f"{ds_uri}/{path}"},
+                "dcat:mediaType": media,
+                "dct:format": {"@id": fid},
+            }
+        )
+    if extra:
+        dcat["dcat:distribution"] = [*existing, *extra]
+    return dcat
 
 
 @app.get("/v1/health", tags=["служебни"])
@@ -86,21 +142,31 @@ def _require(repo: Repository, identifier: str, version: str | None) -> DatasetV
     return dv
 
 
-@app.get("/v1/datasets/{identifier}", tags=["набори"], summary="Детайл на набор (DCAT-AP)")
+@app.get(
+    "/v1/datasets/{identifier}",
+    tags=["набори"],
+    summary="Детайл на набор (DCAT-AP)",
+    response_model=None,
+)
 def get_dataset(
     identifier: str,
     version: str | None = Query(None, description="Конкретна версия; по подразбиране най-новата"),
+    accept: str = Header(default=""),
     repo: Repository = Depends(get_repo),
-) -> dict[str, Any]:
+) -> Response | dict[str, Any]:
+    """Детайл на набора. Съдържа договаряне на съдържанието (МЕ34): ``Accept: text/turtle`` →
+    RDF/Turtle, ``application/ld+json`` → JSON-LD, иначе — JSON обвивка с DCAT вътре."""
     dv = _require(repo, identifier, version)
+    dcat = _enrich_dcat(dv)
+    if "text/turtle" in accept:
+        return Response(formats.dataset_to_turtle(dcat), media_type=TURTLE_MEDIA_TYPE)
+    if "ld+json" in accept:
+        return JSONResponse(dcat, media_type=JSONLD_MEDIA_TYPE)
     return {
         **_summary(dv),
         "checksum_sha256": dv.checksum_sha256,
-        "dcat": dv.dcat,
-        "distributions": {
-            "csv": f"{BASE_URL}/v1/datasets/{dv.identifier}/data.csv",
-            "json": f"{BASE_URL}/v1/datasets/{dv.identifier}/data.json",
-        },
+        "dcat": dcat,
+        "distributions": _distributions(dv),
     }
 
 
@@ -173,6 +239,80 @@ def data_json(
     }
 
 
+@app.get("/v1/datasets/{identifier}/data.xlsx", tags=["данни"], summary="Дистрибуция XLSX (МЕ34)")
+def data_xlsx(
+    identifier: str,
+    version: str | None = Query(None),
+    repo: Repository = Depends(get_repo),
+) -> Response:
+    dv = _require(repo, identifier, version)
+    rows = dv.iter_data()
+    header = next(rows, [])
+    content = formats.xlsx_bytes(header, rows)
+    return Response(
+        content,
+        media_type=XLSX_MEDIA_TYPE,
+        headers={
+            "Content-Disposition": f'attachment; filename="{dv.identifier}-{dv.version}.xlsx"',
+            "X-Total-Count": str(dv.row_count),
+        },
+    )
+
+
+@app.get(
+    "/v1/datasets/{identifier}/dcat.ttl",
+    tags=["интероперативност"],
+    summary="Метаданни (RDF/Turtle)",
+)
+def dataset_ttl(
+    identifier: str,
+    version: str | None = Query(None),
+    repo: Repository = Depends(get_repo),
+) -> Response:
+    dv = _require(repo, identifier, version)
+    return Response(formats.dataset_to_turtle(_enrich_dcat(dv)), media_type=TURTLE_MEDIA_TYPE)
+
+
+@app.get(
+    "/v1/datasets/{identifier}/dcat.jsonld",
+    tags=["интероперативност"],
+    summary="Метаданни (JSON-LD)",
+)
+def dataset_jsonld(
+    identifier: str,
+    version: str | None = Query(None),
+    repo: Repository = Depends(get_repo),
+) -> JSONResponse:
+    dv = _require(repo, identifier, version)
+    return JSONResponse(_enrich_dcat(dv), media_type=JSONLD_MEDIA_TYPE)
+
+
+@app.get(
+    "/v1/datasets/{identifier}/data", tags=["данни"], summary="Данни с договаряне на формат (МЕ34)"
+)
+def data_negotiated(
+    identifier: str,
+    version: str | None = Query(None),
+    accept: str = Header(default=""),
+    repo: Repository = Depends(get_repo),
+) -> Response:
+    """Един адрес, много формати: ``Accept`` избира CSV, XLSX или JSON (по подр. JSON)."""
+    dv = _require(repo, identifier, version)
+    if "text/csv" in accept:
+        return PlainTextResponse(
+            dv.data_csv(),
+            media_type="text/csv; charset=utf-8",
+            headers={"X-Total-Count": str(dv.row_count)},
+        )
+    if "spreadsheet" in accept or "ms-excel" in accept:
+        rows = dv.iter_data()
+        header = next(rows, [])
+        return Response(formats.xlsx_bytes(header, rows), media_type=XLSX_MEDIA_TYPE)
+    return JSONResponse(
+        {"identifier": dv.identifier, "version": dv.version, "download": _distributions(dv)}
+    )
+
+
 @app.get(
     "/v1/datasets/{identifier}/summary",
     tags=["данни"],
@@ -204,9 +344,14 @@ def data_summary(
     }
 
 
+_CATALOG_TITLE_BG = "Портал за отворени данни в здравеопазването"
+_CATALOG_TITLE_EN = "Open Health Data Portal"
+_CATALOG_PUBLISHER = "МИДТ"
+
+
 @app.get("/v1/catalog.jsonld", tags=["интероперативност"], summary="DCAT-AP каталог (JSON-LD)")
 def catalog(repo: Repository = Depends(get_repo)) -> JSONResponse:
-    datasets = [dv.dcat for dv in repo.list_latest()]
+    datasets = [_enrich_dcat(dv) for dv in repo.list_latest()]
     doc = {
         "@context": {
             "dcat": "http://www.w3.org/ns/dcat#",
@@ -215,13 +360,26 @@ def catalog(repo: Repository = Depends(get_repo)) -> JSONResponse:
         },
         "@type": "dcat:Catalog",
         "dct:title": [
-            {"@value": "Портал за отворени данни в здравеопазването", "@language": "bg"},
-            {"@value": "Open Health Data Portal", "@language": "en"},
+            {"@value": _CATALOG_TITLE_BG, "@language": "bg"},
+            {"@value": _CATALOG_TITLE_EN, "@language": "en"},
         ],
-        "dct:publisher": {"@type": "foaf:Agent", "foaf:name": "МИДТ"},
+        "dct:publisher": {"@type": "foaf:Agent", "foaf:name": _CATALOG_PUBLISHER},
         "dcat:dataset": datasets,
     }
-    return JSONResponse(doc, media_type="application/ld+json")
+    return JSONResponse(doc, media_type=JSONLD_MEDIA_TYPE)
+
+
+@app.get("/v1/catalog.ttl", tags=["интероперативност"], summary="DCAT-AP каталог (RDF/Turtle)")
+def catalog_ttl(repo: Repository = Depends(get_repo)) -> Response:
+    datasets = [_enrich_dcat(dv) for dv in repo.list_latest()]
+    body = formats.catalog_to_turtle(
+        datasets,
+        base=BASE_URL,
+        title_bg=_CATALOG_TITLE_BG,
+        title_en=_CATALOG_TITLE_EN,
+        publisher=_CATALOG_PUBLISHER,
+    )
+    return Response(body, media_type=TURTLE_MEDIA_TYPE)
 
 
 # --- CKAN-съвместими крайни точки (за харвестване от data.egov.bg / data.europa.eu) ---
@@ -251,6 +409,8 @@ def ckan_package_show(
             "resources": [
                 {"format": "CSV", "url": f"{BASE_URL}/v1/datasets/{dv.identifier}/data.csv"},
                 {"format": "JSON", "url": f"{BASE_URL}/v1/datasets/{dv.identifier}/data.json"},
+                {"format": "XLSX", "url": f"{BASE_URL}/v1/datasets/{dv.identifier}/data.xlsx"},
+                {"format": "RDF", "url": f"{BASE_URL}/v1/datasets/{dv.identifier}/dcat.ttl"},
             ],
         },
     }
