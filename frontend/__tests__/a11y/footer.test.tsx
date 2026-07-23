@@ -6,7 +6,7 @@ import bg from "@/lib/dictionaries/bg.json";
 
 describe("SiteFooter a11y", () => {
   it("exposes a contentinfo landmark and a source-code link", () => {
-    render(<SiteFooter dict={bg} />);
+    render(<SiteFooter lang="bg" dict={bg} />);
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: bg.footer.repo })).toBeInTheDocument();
   });

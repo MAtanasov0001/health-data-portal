@@ -16,8 +16,22 @@ export default function SiteHeader({ lang, dict }: { lang: Locale; dict: Diction
   return (
     <header className="site">
       <div className="container bar">
-        <Link className="brand" href={`/${lang}`}>
-          {dict.site.short}
+        <Link className="brand" href={`/${lang}`} aria-label={dict.site.name}>
+          {/* Място за логото — заменя се с истинското лого, щом бъде качено. */}
+          <span className="brand-mark" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 3v18M3 12h18"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          <span className="brand-text">
+            <span className="brand-word">{dict.site.brand}</span>
+            <span className="brand-sub">{dict.site.name}</span>
+          </span>
         </Link>
         <nav className="primary" aria-label={dict.site.name}>
           <ul>

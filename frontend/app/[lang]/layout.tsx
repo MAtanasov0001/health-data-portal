@@ -54,7 +54,7 @@ export default async function LangLayout({
         <main id="main" className="container">
           {children}
         </main>
-        <SiteFooter dict={dict} />
+        <SiteFooter lang={lang} dict={dict} />
       </body>
     </html>
   );

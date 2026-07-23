@@ -1,5 +1,6 @@
 {
   "site": {
+    "brand": "MEDATA",
     "name": "Open Health Data Portal",
     "short": "Open Health Data",
     "publisher": "Ministry of Innovation and Digital Transformation"
@@ -14,9 +15,48 @@
     "language": "Language"
   },
   "home": {
-    "title": "Open health data for Bulgaria",
-    "lead": "Machine-readable, freely accessible and interoperable health datasets. Published as DCAT-AP, with independent disclosure control.",
+    "eyebrow": "Open data in healthcare",
+    "title": "Bulgaria's health data — open and verifiable",
+    "lead": "MEDATA brings healthcare spending and activity together in one place and makes it machine-readable, freely accessible and interoperable. Published as DCAT-AP, with independent disclosure control.",
     "cta": "Browse datasets",
+    "ctaDocs": "How to use the data",
+    "stats": {
+      "datasets": "Datasets",
+      "records": "Records",
+      "themes": "Thematic areas",
+      "updated": "Last updated"
+    },
+    "exploreTitle": "Explore the data",
+    "exploreLead": "Current datasets, published as DCAT-AP and available programmatically via a stable API.",
+    "viewAll": "All datasets",
+    "chartsTitle": "The data at a glance",
+    "chartsLead": "Sample aggregates from the pilot datasets. Full data, breakdowns and sources are on each dataset's page.",
+    "chartsMoney": "Reimbursed amount by RHIF (hospital drugs outside pathways, 2025)",
+    "chartsCases": "Number of cases by RHIF (clinical pathway activity, 2025)",
+    "missionTitle": "Why MEDATA",
+    "mission": [
+      "The initiative continues the spirit of the civic project \"Diagnosis Bulgaria\" — a public effort to gather scattered health data in one place and make it understandable to everyone.",
+      "The goal is simple: public health data should be open, machine-readable and verifiable — for citizens, journalists, researchers and institutions. Transparency is a precondition for trust and for better decisions in the system."
+    ],
+    "pipelineTitle": "How it works",
+    "pipeline": [
+      {
+        "title": "Collection",
+        "body": "Data is received from the holders (Ministry of Health, NHIF, etc.) as files or via API — already anonymized and aggregated."
+      },
+      {
+        "title": "Disclosure control",
+        "body": "Small cells are suppressed independently, to prevent re-identification of patients when data is combined."
+      },
+      {
+        "title": "Catalog",
+        "body": "Each dataset is described in DCAT-AP and published in a catalog compatible for harvesting with data.egov.bg and data.europa.eu."
+      },
+      {
+        "title": "API and downloads",
+        "body": "Data is available as CSV, JSON, XLSX and RDF through a versioned, public read API."
+      }
+    ],
     "principlesTitle": "Principles",
     "principles": [
       "Public repository from day 1 — transparency by default.",
@@ -83,19 +123,67 @@
   },
   "docs": {
     "title": "Technical documentation",
-    "lead": "How to use the API, the metadata profile and harvesting formats."
+    "lead": "How to use the API, the metadata profile and harvesting formats. Everything is public, versioned and needs no registration.",
+    "apiTitle": "Public API",
+    "apiLead": "API-first (art. 41): every dataset is available programmatically at a stable address, with a /v1 version and at least 24 months of support.",
+    "catalogTitle": "Catalog (CKAN / DCAT-AP)",
+    "catalogBody": "The catalog core is CKAN. Metadata is published as DCAT-AP 3.0.1 and is available for automatic harvesting by data.egov.bg and data.europa.eu.",
+    "formatsTitle": "Formats",
+    "formats": [
+      "CSV — for tabular tools and spreadsheets.",
+      "JSON — for web apps and scripts.",
+      "XLSX — for working directly in Excel.",
+      "RDF / JSON-LD — for semantic harvesting via DCAT-AP."
+    ],
+    "examplesTitle": "Examples",
+    "swagger": "OpenAPI / Swagger UI",
+    "openapi": "openapi.json (3.1)",
+    "dcatCatalog": "DCAT-AP catalog (JSON-LD)",
+    "ckanJsonld": "DCAT-AP catalog from CKAN (JSON-LD)",
+    "ckanXml": "DCAT-AP catalog from CKAN (RDF/XML)",
+    "ckanPackages": "CKAN package_list"
   },
   "about": {
     "title": "About the portal",
-    "lead": "A joint inter-institutional open health data initiative, institutionally hosted by MIDT."
+    "lead": "A joint inter-institutional open health data initiative, institutionally hosted by the Ministry of Innovation and Digital Transformation.",
+    "originTitle": "From civic audit to public infrastructure",
+    "origin": [
+      "MEDATA continues the civic project \"Diagnosis Bulgaria\" — a platform that gathered and processed millions of rows of official information about the country's hospitals and showed where the money for health goes.",
+      "What began as an independent civic audit becomes here a durable, institutional and open infrastructure: the same transparency, but with a legal framework, longevity and interoperability with the national and European open-data ecosystem."
+    ],
+    "governanceTitle": "Roles and governance",
+    "governance": [
+      "Institutional host: MIDT — provides the framework and longevity, without being the sole technical implementer.",
+      "Data holders: the Ministry of Health, NHIF and others — supply already anonymized and aggregated data.",
+      "The portal adds independent disclosure control and publishes to open standards.",
+      "Development is open and community-driven — public repository, public processes, public rules."
+    ],
+    "standardsTitle": "Standards and compliance",
+    "standards": [
+      "DCAT-AP 3.0.1 and CKAN-compatible harvesting.",
+      "API-first with versioning and content negotiation (CSV/JSON/XLSX/RDF).",
+      "Disclosure control (small-cell suppression) against re-identification.",
+      "Open license and public source code from day 1."
+    ]
   },
   "contact": {
     "title": "Contact",
-    "lead": "Questions, suggestions and reports.",
-    "security": "Security vulnerabilities are disclosed responsibly — see SECURITY.md, not a public issue."
+    "lead": "Questions, suggestions, data reports and proposals for new datasets.",
+    "emailTitle": "Email",
+    "repoTitle": "Contributing and source code",
+    "repoBody": "The project is open. The code, the rules and the decision history are public — suggestions and contributions are welcome.",
+    "repoLink": "Project repository",
+    "securityTitle": "Security",
+    "security": "Security vulnerabilities are disclosed responsibly — see SECURITY.md, not as a public issue."
   },
   "footer": {
+    "tagline": "Open, machine-readable and verifiable health data for Bulgaria.",
     "license": "Content is available under open terms. The code is public.",
-    "repo": "Source code"
+    "repo": "Source code",
+    "sections": {
+      "browse": "Browse",
+      "developers": "Developers",
+      "about": "About"
+    }
   }
 }

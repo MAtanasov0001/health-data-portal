@@ -1,13 +1,47 @@
+/* --- Шрифт: Sofia Sans (self-hosted, променлив) — без външни заявки за поверителност --- */
+@font-face {
+  font-family: "Sofia Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("/fonts/sofia-sans-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Sofia Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("/fonts/sofia-sans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Sofia Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("/fonts/sofia-sans-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
+  /* Палитра с приемственост към НЗИС (his.bg): дълбоко зелено + светли зелени тонове. */
   --bg: #ffffff;
-  --fg: #14213d;
-  --muted: #4a5568;
-  --brand: #0b5fff;
-  --brand-dark: #0842b0;
-  --surface: #f4f6fb;
-  --border: #d5dbe6;
-  --focus: #ffbf00;
-  --max: 72rem;
+  --fg: #00130f; /* дълбоко зелено-черно (текст) */
+  --muted: #4f5b57;
+  --brand: #00664d; /* основно зелено (интерактивно) */
+  --brand-dark: #005842; /* по-тъмно (hover) */
+  --brand-bright: #138d62; /* акцент */
+  --surface: #f2faf8; /* най-светъл зелен тон */
+  --surface-2: #e5f5f1; /* светъл зелен тон (ленти/панели) */
+  --border: #cfe4dd; /* мек зелено-сив кант */
+  --focus: #ffbf00; /* кехлибарен фокус (достъпен контраст) */
+  --danger: #d0201f; /* червено (БГ флаг) — сигнали/грешки */
+  --radius: 0.5rem;
+  --max: 75rem;
 }
 
 * {
@@ -23,16 +57,24 @@ body {
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: "Sofia Sans", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 a {
-  color: var(--brand-dark);
+  color: var(--brand);
 }
 
 a:hover {
-  color: var(--brand);
+  color: var(--brand-dark);
 }
 
 :focus-visible {
@@ -61,91 +103,265 @@ a:hover {
   padding: 0 1.25rem;
 }
 
+/* --- Заглавна лента (бял хедър + зелен бранд, като his.bg / БАИ) --- */
 header.site {
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background: #fff;
 }
 
 header.site .bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 0;
+  gap: 1rem 1.5rem;
+  padding: 0.7rem 1.25rem;
 }
 
 header.site .brand {
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   text-decoration: none;
   color: var(--fg);
+}
+
+/* Място за логото — заменя се с истинското лого, щом бъде качено. */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-bright) 100%);
+  color: #fff;
+  flex: none;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.brand-word {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--brand-dark);
+}
+
+.brand-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+nav.primary {
+  margin-left: auto;
 }
 
 nav.primary ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.35rem 1.25rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
+nav.primary a {
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.35rem 0;
+  border-bottom: 2px solid transparent;
+}
+
+nav.primary a:hover {
+  color: var(--brand-dark);
+  border-bottom-color: var(--border);
+}
+
 nav.primary a[aria-current="page"] {
-  font-weight: 700;
-  text-decoration: underline;
+  color: var(--brand-dark);
+  border-bottom-color: var(--brand);
 }
 
 main {
   min-height: 60vh;
-  padding: 2rem 0 3rem;
+  padding: 0 0 3rem;
 }
 
+/* --- Hero лента (светло зелена, БАИ-стил) — центрирана на началната страница --- */
 .hero {
-  padding: 2.5rem 0;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  margin: 0 0 2.5rem;
+  padding: 3.75rem 0 3.25rem;
+  text-align: center;
+  /* Излиза извън .container, за да е плътна лента по цялата ширина. */
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.hero > * {
+  max-width: var(--max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
 }
 
 .hero h1 {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  margin: 0 0 0.75rem;
+  font-size: clamp(2.1rem, 4.5vw, 3rem);
+  margin: 0 auto 0.9rem;
+  max-width: 20ch;
+  color: var(--brand-dark);
+}
+
+/* Eyebrow като центриран „pill" бадж над заглавието. */
+.hero .eyebrow {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.35rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--brand-dark);
+}
+
+/* Водещият абзац — центриран и с удобна за четене ширина. */
+.hero .lead {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.2rem;
+}
+
+/* Бутоните и лентата с метрики — центрирани спрямо hero. */
+.hero .cta-row {
+  justify-content: center;
+}
+
+.hero .stat-strip {
+  justify-content: center;
+  max-width: 48rem;
+  margin: 2.25rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
 }
 
 .lead {
   color: var(--muted);
   font-size: 1.15rem;
-  max-width: 46rem;
+  max-width: 48rem;
 }
 
 .btn {
   display: inline-block;
   background: var(--brand);
   color: #fff;
-  padding: 0.6rem 1.1rem;
-  border-radius: 0.4rem;
+  padding: 0.65rem 1.3rem;
+  border-radius: var(--radius);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
+  transition:
+    background 0.15s,
+    transform 0.15s;
 }
 
 .btn:hover {
   background: var(--brand-dark);
   color: #fff;
+  transform: translateY(-1px);
 }
 
+/* --- Трошки (breadcrumb) --- */
+.breadcrumb {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.breadcrumb a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* --- Лента с метрики (stat strip, БАИ-стил) --- */
+.stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 1.25rem 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.stat-strip .stat {
+  padding: 0.85rem 1.5rem 0.85rem 0;
+  margin-right: 1.5rem;
+  border-right: 1px solid var(--border);
+}
+
+.stat-strip .stat:last-child {
+  border-right: none;
+}
+
+.stat .stat-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.stat .stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+/* --- Карти (с акцентна горна линия) --- */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: 1.1rem;
   padding: 0;
   list-style: none;
 }
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1rem 1.1rem;
+  border-top: 3px solid var(--brand);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
   background: #fff;
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(0, 88, 66, 0.12);
+  transform: translateY(-2px);
 }
 
 .card h3 {
   margin: 0 0 0.4rem;
+}
+
+.card h3 a {
+  text-decoration: none;
+}
+
+.card h3 a:hover {
+  text-decoration: underline;
 }
 
 .meta {
@@ -153,39 +369,66 @@ main {
   font-size: 0.9rem;
 }
 
+/* --- Панел с метаданни (ляв панел, Eurostat/БАИ-стил) --- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.35rem;
+}
+
 dl.kv {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 0.35rem 1rem;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
 }
 
 dl.kv dt {
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--muted);
+  align-self: center;
 }
 
 dl.kv dd {
   margin: 0;
+  font-weight: 600;
   word-break: break-word;
 }
 
 pre {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0.4rem;
+  background: var(--fg);
+  color: #eafaf4;
+  border-radius: var(--radius);
   padding: 1rem;
   overflow-x: auto;
-}
-
-footer.site {
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  padding: 1.5rem 0;
   font-size: 0.9rem;
 }
 
-/* Достъпно скриване: видимо само за екранни четци (таблица-еквивалент на графиката). */
+pre code {
+  color: inherit;
+}
+
+code {
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
+}
+
+footer.site {
+  border-top: 3px solid var(--brand);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 2rem 0;
+  font-size: 0.9rem;
+}
+
+footer.site a {
+  color: var(--brand-dark);
+}
+
+/* Достъпно скриване: видимо само за екранни четци. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -202,19 +445,24 @@ section {
   margin: 2rem 0;
 }
 
+h2 {
+  color: var(--brand-dark);
+}
+
 /* --- Визуализация (стълбовидна графика на чист SVG) --- */
 .chart {
   margin: 0.5rem 0 0;
   padding: 1rem;
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
   background: #fff;
 }
 
 .chart figcaption,
 figure.chart > figcaption {
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.75rem;
+  color: var(--brand-dark);
 }
 
 .chart-bar {
@@ -222,7 +470,7 @@ figure.chart > figcaption {
 }
 
 .chart-bar:hover {
-  fill: var(--brand-dark);
+  fill: var(--brand-bright);
 }
 
 .chart-label {
@@ -239,7 +487,7 @@ figure.chart > figcaption {
 .table-scroll {
   overflow-x: auto;
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
 }
 
 table.data {
@@ -251,7 +499,7 @@ table.data {
 table.data th,
 table.data td {
   text-align: left;
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.8rem;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
@@ -259,7 +507,8 @@ table.data td {
 table.data thead th {
   position: sticky;
   top: 0;
-  background: var(--surface);
+  background: var(--surface-2);
+  color: var(--brand-dark);
   font-weight: 700;
 }
 
@@ -275,13 +524,276 @@ table.data tbody tr:nth-child(even) {
   margin-top: 0.75rem;
 }
 
+.pager a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .pager [aria-disabled="true"] {
   color: var(--border);
 }
 
 .langswitch {
-  margin-left: auto;
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  font-size: 0.9rem;
+}
+
+.langswitch ul {
+  display: flex;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.langswitch a {
+  text-decoration: none;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+}
+
+.langswitch a[aria-current="true"] {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* --- Начална страница: eyebrow, CTA-ред, вторичен бутон --- */
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--brand-bright);
+  margin: 0 0 0.6rem;
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.btn-ghost {
+  display: inline-block;
+  background: transparent;
+  color: var(--brand-dark);
+  padding: 0.6rem 1.25rem;
+  border: 2px solid var(--brand);
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: 700;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.btn-ghost:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* --- Заглавие на секция с връзка вдясно --- */
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.section-head h2 {
+  margin: 0;
+}
+
+.section-link {
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.section-lead {
+  color: var(--muted);
+  font-size: 1.05rem;
+  margin: 0.35rem 0 1.1rem;
+  max-width: 52rem;
+}
+
+/* --- Две графики една до друга --- */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.1rem;
+}
+
+/* --- Как работи: номерирани стъпки --- */
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pipeline-step {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+}
+
+.pipeline-step h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+}
+
+.pipeline-step .meta {
+  margin: 0;
+}
+
+.pipeline-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+/* --- Мисия + принципи --- */
+.mission {
+  background: var(--surface-2);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+}
+
+.mission-p {
+  max-width: 60rem;
+  margin: 0 0 0.9rem;
+}
+
+.mission-sub {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.principles {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.principles li {
+  margin-bottom: 0.4rem;
+}
+
+/* --- Списъци с отметки (за портала / документация) --- */
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.checklist li {
+  position: relative;
+  padding-left: 1.75rem;
+}
+
+.checklist li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--brand);
+  font-weight: 800;
+}
+
+.link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.link-list a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link-list a:hover {
+  text-decoration: underline;
+}
+
+.prose p {
+  max-width: 60rem;
+}
+
+/* --- Разгърнат футер с колони --- */
+footer.site .footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 1.5rem 2rem;
+}
+
+@media (max-width: 48rem) {
+  footer.site .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.footer-brand .brand-word {
+  font-size: 1.4rem;
+}
+
+.footer-tagline {
+  margin: 0.4rem 0 0;
+  max-width: 22rem;
+}
+
+.footer-col h2 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.footer-col a {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-col a:hover {
+  text-decoration: underline;
+}
+
+.footer-legal {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
 }
