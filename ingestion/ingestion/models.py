@@ -12,7 +12,12 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
+from . import vocab
+
 SUPPRESSED_MARKER = "<5"
+
+# Единен образец за slug-идентификатор (малки букви/цифри, разделени с тире).
+SLUG_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 
 class ColumnSpec(BaseModel):
@@ -88,9 +93,34 @@ class DatasetMetadata(BaseModel):
     @field_validator("identifier")
     @classmethod
     def _slug(cls, v: str) -> str:
-        if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", v):
+        if not SLUG_RE.fullmatch(v):
             raise ValueError("identifier трябва да е slug: малки букви, цифри и тире")
         return v
+
+    @field_validator("theme")
+    @classmethod
+    def _theme(cls, v: list[str]) -> list[str]:
+        return vocab.check_theme(v)
+
+    @field_validator("accrual_periodicity")
+    @classmethod
+    def _accrual(cls, v: str | None) -> str | None:
+        return vocab.check_frequency(v)
+
+    @field_validator("access_rights")
+    @classmethod
+    def _access(cls, v: str) -> str:
+        return vocab.check_access_right(v)
+
+    @field_validator("license")
+    @classmethod
+    def _license(cls, v: str) -> str:
+        return vocab.check_license(v)
+
+    @field_validator("spatial")
+    @classmethod
+    def _spatial(cls, v: list[str]) -> list[str]:
+        return vocab.check_spatial(v)
 
     @classmethod
     def from_yaml(cls, path: Path) -> DatasetMetadata:

@@ -9,6 +9,7 @@ from urllib.parse import quote
 from ..disclosure import DisclosureReport
 from ..models import DatasetMetadata, DisclosureSpec
 from ..snapshot import Snapshot
+from ..vocab import LICENSE_URI
 
 # Каноничният домейн на портала. Конфигурируем чрез ``OHDP_BASE_URL`` (същата променлива като в
 # публичното API), за да не е зашит хостът в снапшотите — DCAT @id/URL следват средата (чл. 16:
@@ -19,7 +20,6 @@ FREQ_BASE = "http://publications.europa.eu/resource/authority/frequency/"
 ACCESS_BASE = "http://publications.europa.eu/resource/authority/access-right/"
 FILE_TYPE_BASE = "http://publications.europa.eu/resource/authority/file-type/"
 NUTS_BASE = "http://data.europa.eu/nuts/code/"
-LICENSE_URI = {"CC-BY-4.0": "http://creativecommons.org/licenses/by/4.0/"}
 
 # Дистрибуции по МЕ34 (експорт в няколко формата). CSV носи контролната сума на снапшота;
 # останалите формати се произвеждат от API-то при поискване (същите данни, различен пренос).

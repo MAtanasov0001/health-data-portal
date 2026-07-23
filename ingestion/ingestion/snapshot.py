@@ -14,6 +14,9 @@ from .disclosure import DisclosureReport
 from .models import DatasetMetadata
 from .timeutil import now_iso
 
+# Версия на формата на манифеста — API-то може да различи стар от нов запис при бъдещи промени.
+MANIFEST_VERSION = 1
+
 
 @dataclass
 class Snapshot:
@@ -58,6 +61,7 @@ def write_snapshot(
     (target / "data.csv").write_text(csv_text, encoding="utf-8")
 
     manifest = {
+        "manifest_version": MANIFEST_VERSION,
         "identifier": metadata.identifier,
         "version": metadata.version,
         "created_at": created_at,

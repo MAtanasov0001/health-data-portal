@@ -18,7 +18,6 @@ import csv
 import hashlib
 import io
 import json
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -26,13 +25,18 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
+from . import vocab
+from .models import SLUG_RE
 from .timeutil import now_iso
 
-_SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+_SLUG = SLUG_RE
 _THEME_BASE = "http://publications.europa.eu/resource/authority/data-theme/"
 _ACCESS_BASE = "http://publications.europa.eu/resource/authority/access-right/"
 _FILE_TYPE_BASE = "http://publications.europa.eu/resource/authority/file-type/"
-_LICENSE_URI = {"CC-BY-4.0": "http://creativecommons.org/licenses/by/4.0/"}
+_LICENSE_URI = vocab.LICENSE_URI
+
+# Версия на формата на манифеста — API-то може да различи стар от нов запис при бъдещи промени.
+MANIFEST_VERSION = 1
 
 
 class TableSpec(BaseModel):
@@ -71,6 +75,16 @@ class CollectionSpec(BaseModel):
         if not _SLUG.fullmatch(v):
             raise ValueError("identifier на колекция трябва да е slug")
         return v
+
+    @field_validator("theme")
+    @classmethod
+    def _theme(cls, v: list[str]) -> list[str]:
+        return vocab.check_theme(v)
+
+    @field_validator("license")
+    @classmethod
+    def _license(cls, v: str) -> str:
+        return vocab.check_license(v)
 
     @classmethod
     def from_yaml(cls, path: Path) -> CollectionSpec:
@@ -173,9 +187,7 @@ def _build_dcat(
                 "dct:format": {"@id": _FILE_TYPE_BASE + "CSV"},
                 "spdx:checksum": {
                     "@type": "spdx:Checksum",
-                    "spdx:algorithm": {
-                        "@id": "http://spdx.org/rdf/terms#checksumAlgorithm_sha256"
-                    },
+                    "spdx:algorithm": {"@id": "http://spdx.org/rdf/terms#checksumAlgorithm_sha256"},
                     "spdx:checksumValue": checksum,
                 },
                 "dct:issued": {"@value": created_at, "@type": "xsd:dateTime"},
@@ -217,6 +229,7 @@ def _write_table(
     (target / "data.csv").write_text(csv_text, encoding="utf-8")
 
     manifest = {
+        "manifest_version": MANIFEST_VERSION,
         "identifier": identifier,
         "version": spec.version,
         "created_at": created_at,

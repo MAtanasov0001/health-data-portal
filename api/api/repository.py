@@ -10,7 +10,7 @@ import csv
 import itertools
 import json
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -23,10 +23,18 @@ class DatasetVersion:
     checksum_sha256: str
     row_count: int
     path: Path
+    # Кеш за парснатия манифест: ``.collection``/``.dimensions``/``.measures`` четат все
+    # него, а един изглед на списъка докосва десетки набори — без кеш всяко докосване
+    # пре-чете и пре-парсва JSON от диска. Не участва в равенство/repr (compare=False).
+    _manifest_cache: dict[str, Any] = field(default_factory=dict, compare=False, repr=False)
 
     @property
     def manifest(self) -> dict[str, Any]:
-        return json.loads((self.path / "manifest.json").read_text(encoding="utf-8"))
+        if not self._manifest_cache:
+            self._manifest_cache.update(
+                json.loads((self.path / "manifest.json").read_text(encoding="utf-8"))
+            )
+        return self._manifest_cache
 
     @property
     def dcat(self) -> dict[str, Any]:
