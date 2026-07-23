@@ -12,6 +12,22 @@ from __future__ import annotations
 
 from .config import SecurityConfig
 from .middleware import install_security
+from .secrets import (
+    EnvSecretProvider,
+    SecretNotFound,
+    SecretProvider,
+    get_secret_provider,
+    redact,
+)
 from .validation import validate_identifier
 
-__all__ = ["SecurityConfig", "install_security", "validate_identifier"]
+__all__ = [
+    "EnvSecretProvider",
+    "SecretNotFound",
+    "SecretProvider",
+    "SecurityConfig",
+    "get_secret_provider",
+    "install_security",
+    "redact",
+    "validate_identifier",
+]
