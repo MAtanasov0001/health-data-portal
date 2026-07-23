@@ -67,3 +67,7 @@ docker-compose.override.yml
 # Agent/workspace tooling (OpenKBS staging workspace — not portal deliverables)
 .claude/
 .uploads/
+
+# OpenKBS демо/staging: статичен експорт на /frontend, деплойван за жив визуален преглед.
+# Изхвърляем билд-артефакт — каноничният frontend е в /frontend, не тук.
+/site/

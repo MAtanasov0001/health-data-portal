@@ -3,7 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import BarChart from "@/components/BarChart";
-import { API_BASE, getDataset, getDatasetRows, getSummary, localizedTitle } from "@/lib/api";
+import {
+  API_BASE,
+  getDataset,
+  getDatasetRows,
+  getSummary,
+  listDatasets,
+  localizedTitle,
+} from "@/lib/api";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
 
@@ -13,6 +20,20 @@ interface Params {
 }
 
 const PAGE_SIZE = 20;
+
+// Статичен експорт (демо/staging): без сървър, затова четенето на searchParams се пропуска и
+// генерираме идентификаторите предварително. При SSR (продукция) нищо от това не се активира.
+const STATIC_EXPORT = process.env.STATIC_EXPORT === "1";
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  if (!STATIC_EXPORT) return [];
+  try {
+    const data = await listDatasets(1, 100);
+    return data.items.map((d) => ({ id: d.identifier }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -43,7 +64,7 @@ export default async function DatasetDetailPage({
   const ds = await getDataset(id);
   if (!ds) notFound();
 
-  const sp = await searchParams;
+  const sp = STATIC_EXPORT ? {} : await searchParams;
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const [rowsPage, summary] = await Promise.all([
     getDatasetRows(id, page, PAGE_SIZE),
