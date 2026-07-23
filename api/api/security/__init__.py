@@ -19,15 +19,27 @@ from .secrets import (
     get_secret_provider,
     redact,
 )
+from .ssrf import (
+    SafeFetchPolicy,
+    SsrfError,
+    fetch,
+    is_blocked_address,
+    validate_target,
+)
 from .validation import validate_identifier
 
 __all__ = [
     "EnvSecretProvider",
+    "SafeFetchPolicy",
     "SecretNotFound",
     "SecretProvider",
     "SecurityConfig",
+    "SsrfError",
+    "fetch",
     "get_secret_provider",
     "install_security",
+    "is_blocked_address",
     "redact",
     "validate_identifier",
+    "validate_target",
 ]
