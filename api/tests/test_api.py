@@ -1,19 +1,9 @@
-from pathlib import Path
-
 import pytest
 
 pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient  # noqa: E402
 
 from api import main  # noqa: E402
-from api.repository import Repository  # noqa: E402
-
-
-@pytest.fixture()
-def client(snapshots_root: Path):
-    main.app.dependency_overrides[main.get_repo] = lambda: Repository(snapshots_root)
-    yield TestClient(main.app)
-    main.app.dependency_overrides.clear()
 
 
 def test_health(client: TestClient):

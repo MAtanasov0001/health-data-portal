@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from . import formats
 from .repository import DatasetVersion, Repository
+from .security import install_security, validate_identifier
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 TURTLE_MEDIA_TYPE = "text/turtle; charset=utf-8"
@@ -47,6 +48,10 @@ async def _advertise_api_version(request: Request, call_next: Any) -> Response:
     response: Response = await call_next(request)
     response.headers["X-API-Version"] = API_VERSION
     return response
+
+
+# Пласт за сигурност (режим C): защитни хедъри, CORS, лимити, безопасни грешки.
+install_security(app)
 
 
 def get_repo() -> Repository:
@@ -188,6 +193,7 @@ def list_datasets(
 
 
 def _require(repo: Repository, identifier: str, version: str | None) -> DatasetVersion:
+    validate_identifier(identifier)
     dv = repo.get(identifier, version)
     if dv is None:
         raise HTTPException(
@@ -236,6 +242,7 @@ def get_dataset(
 
 @app.get("/v1/datasets/{identifier}/versions", tags=["набори"], summary="Всички версии на набор")
 def list_versions(identifier: str, repo: Repository = Depends(get_repo)) -> dict[str, Any]:
+    validate_identifier(identifier)
     versions = repo._versions(identifier)
     if not versions:
         raise HTTPException(status_code=404, detail=f"Няма набор '{identifier}'")
@@ -483,6 +490,7 @@ def ckan_package_show(
     id: str = Query(..., description="Идентификатор на набора"),
     repo: Repository = Depends(get_repo),
 ) -> dict[str, Any]:
+    validate_identifier(id)
     dv = repo.latest(id)
     if dv is None:
         raise HTTPException(status_code=404, detail=f"Няма набор '{id}'")
