@@ -1,0 +1,34 @@
+# Колекция (група свързани таблици) — Eurostat-подобен модел: една тема, много таблици.
+# Данните са предварително агрегирани публични броеве; не изискват контрол на разкриването.
+identifier: napravleniya-nzok-2026
+title:
+  bg: Издадени направления (НЗОК), 2026
+  en: Issued referrals (NHIF), 2026
+description:
+  bg: >-
+    Група таблици с годишни агрегати на издадените направления през 2026 г. — по вид и по вид
+    и област на лечебното заведение. Всяка таблица е самостоятелен набор с публично API и
+    интерактивна визуализация (метаданни → таблица → филтър → графика).
+  en: >-
+    A group of tables with annual aggregates of issued referrals in 2026 — by type, and by
+    type and district of the medical institution. Each table is a standalone dataset with a
+    public API and interactive visualization (metadata → table → filter → chart).
+publisher: Министерство на иновациите и дигиталната трансформация (МИДТ)
+contact_email: data@health.egov.bg
+theme: [HEAL]
+keyword:
+  bg: [направления, НЗОК, извънболнична помощ]
+  en: [referrals, NHIF, outpatient care]
+license: CC-BY-4.0
+version: 1.0.0
+tables:
+  - file: po-vid.csv
+    identifier: po-vid
+    title:
+      bg: Направления по вид
+      en: Referrals by type
+  - file: po-vid-i-oblast.csv
+    identifier: po-vid-i-oblast
+    title:
+      bg: Направления по вид и област
+      en: Referrals by type and district

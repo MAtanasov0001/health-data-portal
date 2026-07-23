@@ -139,7 +139,34 @@ def main(argv: list[str] | None = None) -> int:
         help="Коренна директория за снапшоти (по подразбиране ingestion/snapshots)",
     )
 
+    coll_p = sub.add_parser(
+        "collection",
+        help="Приеми колекция (група таблици) — Eurostat-подобен модел, без контрол",
+    )
+    coll_p.add_argument(
+        "collection_dir",
+        type=Path,
+        help="Директория с collection.yaml + tables/*.csv",
+    )
+    coll_p.add_argument(
+        "--out",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "snapshots",
+        help="Коренна директория за снапшоти (по подразбиране ingestion/snapshots)",
+    )
+
     args = parser.parse_args(argv)
+    if args.cmd == "collection":
+        from .collections import run_collection
+
+        coll = run_collection(args.collection_dir, args.out)
+        print(f"✓ Колекция: {coll.identifier}@{coll.version} — {len(coll.tables)} таблици")
+        for t in coll.tables:
+            print(
+                f"  · {t.identifier}: {t.row_count} реда · "
+                f"измерения={t.dimensions} · мерки={t.measures}"
+            )
+        return 0
     if args.cmd == "run":
         result = run(args.dataset_dir, args.out)
         s = result.snapshot

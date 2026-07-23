@@ -13,6 +13,7 @@ export interface DatasetSummary {
   issued: string;
   row_count: number;
   themes: string[];
+  collection?: string | null;
 }
 
 export interface DatasetList {
@@ -105,4 +106,93 @@ export async function getDataset(identifier: string): Promise<DatasetDetail | nu
 /** Заглавие според езика, с разумно връщане към наличния. */
 export function localizedTitle(title: Record<string, string>, locale: string): string {
   return title[locale] ?? title.bg ?? Object.values(title)[0] ?? "";
+}
+
+// ── Колекции (групи свързани таблици — Eurostat-подобен модел) ──────────────────────
+
+export interface CollectionSummary {
+  id: string;
+  uri: string;
+  title: Record<string, string>;
+  description: Record<string, string>;
+  table_count: number;
+  total_rows: number;
+  themes: string[];
+  issued: string;
+}
+
+export interface CollectionTable {
+  identifier: string;
+  table: string;
+  title: Record<string, string>;
+  row_count: number;
+  columns: string[];
+  dimensions: string[];
+  measures: string[];
+}
+
+export interface CollectionDetail extends CollectionSummary {
+  tables: CollectionTable[];
+}
+
+export interface CollectionList {
+  total: number;
+  items: CollectionSummary[];
+}
+
+/** Пълните редове на една таблица (наборите в колекциите са малки — до няколкостотин реда). */
+export interface TableData {
+  identifier: string;
+  columns: string[];
+  dimensions: string[];
+  measures: string[];
+  title: Record<string, string>;
+  rows: Record<string, string | null>[];
+}
+
+export async function listCollections(): Promise<CollectionList> {
+  try {
+    return await getJson<CollectionList>(`/v1/collections`);
+  } catch {
+    return { total: 0, items: [] };
+  }
+}
+
+export async function getCollection(id: string): Promise<CollectionDetail | null> {
+  try {
+    return await getJson<CollectionDetail>(`/v1/collections/${encodeURIComponent(id)}`);
+  } catch {
+    return null;
+  }
+}
+
+/** Извлича всички редове на таблица (page_size 1000) — за вграждане в интерактивния explorer. */
+export async function getTableRows(id: string): Promise<Record<string, string | null>[]> {
+  try {
+    const data = await getJson<DataRowsPage>(
+      `/v1/datasets/${encodeURIComponent(id)}/data.json?page_size=1000`,
+    );
+    return data.rows;
+  } catch {
+    return [];
+  }
+}
+
+/** Зарежда колекция + пълните данни на всяка таблица, готови за клиентския explorer. */
+export async function getCollectionWithData(
+  id: string,
+): Promise<{ collection: CollectionDetail; tables: TableData[] } | null> {
+  const collection = await getCollection(id);
+  if (!collection) return null;
+  const tables = await Promise.all(
+    collection.tables.map(async (t) => ({
+      identifier: t.identifier,
+      columns: t.columns,
+      dimensions: t.dimensions,
+      measures: t.measures,
+      title: t.title,
+      rows: await getTableRows(t.identifier),
+    })),
+  );
+  return { collection, tables };
 }

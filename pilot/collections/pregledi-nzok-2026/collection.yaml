@@ -1,0 +1,66 @@
+# Колекция (група свързани таблици) — Eurostat-подобен модел: една тема, много таблици.
+# Данните са предварително агрегирани публични броеве; не изискват контрол на разкриването.
+identifier: pregledi-nzok-2026
+title:
+  bg: Извършени прегледи (извънболнична помощ, НЗОК), 2026
+  en: Outpatient examinations (NHIF), 2026
+description:
+  bg: >-
+    Група таблици с годишни агрегати на извършените прегледи в извънболничната помощ през
+    2026 г. — по вид, област, източник на финансиране, причина за посещение, специалност на
+    лекаря, първични/вторични, както и топ 15 диагнози (МКБ-10) и топ диагнози при деца.
+    Всяка таблица е самостоятелен набор с публично API и интерактивна визуализация.
+  en: >-
+    A group of tables with annual aggregates of outpatient examinations in 2026 — by type,
+    district, financing source, reason for visit, doctor specialization, primary/secondary,
+    plus the top 15 diagnoses (ICD-10) and top diagnoses in children. Each table is a
+    standalone dataset with a public API and interactive visualization.
+publisher: Министерство на иновациите и дигиталната трансформация (МИДТ)
+contact_email: data@health.egov.bg
+theme: [HEAL]
+keyword:
+  bg: [прегледи, извънболнична помощ, НЗОК, диагнози, специалности]
+  en: [examinations, outpatient care, NHIF, diagnoses, specialties]
+license: CC-BY-4.0
+version: 1.0.0
+tables:
+  - file: po-vid.csv
+    identifier: po-vid
+    title:
+      bg: Прегледи по вид
+      en: Examinations by type
+  - file: po-oblast.csv
+    identifier: po-oblast
+    title:
+      bg: Прегледи по област
+      en: Examinations by district
+  - file: po-iztochnik-finansirane.csv
+    identifier: po-iztochnik-finansirane
+    title:
+      bg: Прегледи по източник на финансиране
+      en: Examinations by financing source
+  - file: po-prichina.csv
+    identifier: po-prichina
+    title:
+      bg: Прегледи по причина за посещение
+      en: Examinations by reason for visit
+  - file: po-specialnost.csv
+    identifier: po-specialnost
+    title:
+      bg: Прегледи по специалност на лекаря
+      en: Examinations by doctor specialization
+  - file: parvichni-vtorichni.csv
+    identifier: parvichni-vtorichni
+    title:
+      bg: Първични и вторични прегледи
+      en: Primary and secondary examinations
+  - file: top15-diagnozi-mkb.csv
+    identifier: top15-diagnozi-mkb
+    title:
+      bg: Топ 15 диагнози (МКБ-10)
+      en: Top 15 diagnoses (ICD-10)
+  - file: top15-diagnozi-deca.csv
+    identifier: top15-diagnozi-deca
+    title:
+      bg: Топ диагнози при деца (по възраст)
+      en: Top diagnoses in children (by age)

@@ -32,6 +32,22 @@ class DatasetVersion:
     def dcat(self) -> dict[str, Any]:
         return json.loads((self.path / "dcat.jsonld").read_text(encoding="utf-8"))
 
+    @property
+    def collection(self) -> dict[str, Any] | None:
+        """Метаданни за колекцията (група таблици), ако наборът е член на такава — иначе ``None``."""
+        value = self.manifest.get("collection")
+        return value if isinstance(value, dict) else None
+
+    @property
+    def dimensions(self) -> list[str]:
+        """Категорийни колони (за избор на измерение във визуализацията)."""
+        return list(self.manifest.get("dimensions", []))
+
+    @property
+    def measures(self) -> list[str]:
+        """Числови колони (за избор на мярка във визуализацията)."""
+        return list(self.manifest.get("measures", []))
+
     def data_csv(self) -> str:
         return (self.path / "data.csv").read_text(encoding="utf-8")
 
@@ -138,3 +154,26 @@ class Repository:
         items = [dv for dv in result if dv is not None]
         items.sort(key=lambda dv: dv.identifier)
         return items
+
+    def collection_members(self, collection_id: str) -> list[DatasetVersion]:
+        """Най-новите версии на всички таблици, чийто манифест сочи ``collection.id``."""
+        members = [
+            dv
+            for dv in self.list_latest()
+            if (dv.collection or {}).get("id") == collection_id
+        ]
+        members.sort(key=lambda dv: dv.identifier)
+        return members
+
+    def collections(self) -> dict[str, list[DatasetVersion]]:
+        """Групира най-новите набори по идентификатор на колекция (само тези с колекция)."""
+        groups: dict[str, list[DatasetVersion]] = {}
+        for dv in self.list_latest():
+            coll = dv.collection
+            if not coll:
+                continue
+            cid = str(coll.get("id"))
+            groups.setdefault(cid, []).append(dv)
+        for members in groups.values():
+            members.sort(key=lambda dv: dv.identifier)
+        return groups

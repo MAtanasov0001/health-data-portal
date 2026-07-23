@@ -1,0 +1,44 @@
+# Колекция (група свързани таблици) — Eurostat-подобен модел: една тема, много таблици.
+# Данните са предварително агрегирани публични броеве; не изискват контрол на разкриването.
+identifier: recepti-nzok-2026
+title:
+  bg: Издадени рецепти (извънболнична помощ, НЗОК), 2026
+  en: Issued prescriptions (outpatient care, NHIF), 2026
+description:
+  bg: >-
+    Група таблици с годишни агрегати на издадените рецепти през 2026 г. — по вид, по област,
+    по източник на финансиране и по месец. Всяка таблица е самостоятелен набор с публично API
+    и може да се визуализира интерактивно (метаданни → таблица → филтър → графика).
+  en: >-
+    A group of tables with annual aggregates of issued prescriptions in 2026 — by type, by
+    district, by financing source and by month. Each table is a standalone dataset with a
+    public API and can be explored interactively (metadata → table → filter → chart).
+publisher: Министерство на иновациите и дигиталната трансформация (МИДТ)
+contact_email: data@health.egov.bg
+theme: [HEAL]
+keyword:
+  bg: [рецепти, лекарства, НЗОК, извънболнична помощ]
+  en: [prescriptions, medicines, NHIF, outpatient care]
+license: CC-BY-4.0
+version: 1.0.0
+tables:
+  - file: po-vid.csv
+    identifier: po-vid
+    title:
+      bg: Рецепти по вид
+      en: Prescriptions by type
+  - file: po-oblast.csv
+    identifier: po-oblast
+    title:
+      bg: Рецепти по област
+      en: Prescriptions by district
+  - file: po-iztochnik-finansirane.csv
+    identifier: po-iztochnik-finansirane
+    title:
+      bg: Рецепти по източник на финансиране
+      en: Prescriptions by financing source
+  - file: po-mesec-i-vid.csv
+    identifier: po-mesec-i-vid
+    title:
+      bg: Рецепти по месец и вид
+      en: Prescriptions by month and type

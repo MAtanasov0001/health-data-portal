@@ -115,6 +115,7 @@ def _summary(dv: DatasetVersion) -> dict[str, Any]:
         "issued": dv.created_at,
         "row_count": dv.row_count,
         "themes": [t["@id"].rsplit("/", 1)[-1] for t in dcat.get("dcat:theme", [])],
+        "collection": (dv.collection or {}).get("id"),
     }
 
 
@@ -190,6 +191,74 @@ def list_datasets(
         "page_size": page_size,
         "items": [_summary(dv) for dv in window],
     }
+
+
+def _titles_dict(value: Any) -> dict[str, str]:
+    """Заглавие от манифеста (обикновен dict bg/en) или от DCAT (списък с @language)."""
+    if isinstance(value, dict):
+        return {k: str(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return {t["@language"]: t["@value"] for t in value if "@language" in t}
+    return {}
+
+
+def _collection_group(cid: str, members: list[DatasetVersion]) -> dict[str, Any]:
+    """Обобщение на една колекция (група таблици) за списъка ``/v1/collections``."""
+    meta = members[0].collection or {}
+    themes = sorted(
+        {
+            t["@id"].rsplit("/", 1)[-1]
+            for dv in members
+            for t in dv.dcat.get("dcat:theme", [])
+        }
+    )
+    return {
+        "id": cid,
+        "uri": f"{BASE_URL}/v1/collections/{cid}",
+        "title": _titles_dict(meta.get("title")),
+        "description": _titles_dict(meta.get("description")),
+        "table_count": len(members),
+        "total_rows": sum(dv.row_count for dv in members),
+        "themes": themes,
+        "issued": max((dv.created_at for dv in members), default=""),
+    }
+
+
+def _collection_table(dv: DatasetVersion) -> dict[str, Any]:
+    """Един член на колекция — таблица с извлечени измерения/мерки за визуализацията."""
+    meta = dv.collection or {}
+    return {
+        "identifier": dv.identifier,
+        "table": meta.get("table"),
+        "title": _titles_dict(meta.get("table_title")),
+        "row_count": dv.row_count,
+        "columns": dv.manifest.get("columns", []),
+        "dimensions": dv.dimensions,
+        "measures": dv.measures,
+    }
+
+
+@app.get("/v1/collections", tags=["набори"], summary="Списък с колекции (групи таблици)")
+def list_collections(repo: Repository = Depends(get_repo)) -> dict[str, Any]:
+    """Колекциите са Eurostat-подобни групи от свързани таблици под обща тема."""
+    groups = repo.collections()
+    items = [_collection_group(cid, members) for cid, members in sorted(groups.items())]
+    return {"total": len(items), "items": items}
+
+
+@app.get(
+    "/v1/collections/{collection_id}",
+    tags=["набори"],
+    summary="Детайл на колекция + нейните таблици",
+)
+def get_collection(collection_id: str, repo: Repository = Depends(get_repo)) -> dict[str, Any]:
+    validate_identifier(collection_id)
+    members = repo.collection_members(collection_id)
+    if not members:
+        raise HTTPException(status_code=404, detail=f"Няма колекция '{collection_id}'")
+    body = _collection_group(collection_id, members)
+    body["tables"] = [_collection_table(dv) for dv in members]
+    return body
 
 
 def _require(repo: Repository, identifier: str, version: str | None) -> DatasetVersion:
