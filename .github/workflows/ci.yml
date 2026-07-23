@@ -94,6 +94,14 @@ jobs:
           # Всеки пакет има свой набор тестове (пакет `tests`); пускаме ги
           # поотделно, за да няма конфликт на едноименни тестови пакети.
           for d in ingestion api; do [ -d "$d/tests" ] && (cd "$d" && pytest -q); done
+      - name: DCAT-AP профил — валидатор (блокираща порта)
+        run: |
+          # Всеки JSON-LD пример трябва да е валиден спрямо spec/dcat-ap/profile.json.
+          # Статистическите набори (stat:) се проверяват и по StatDCAT-AP.
+          shopt -s nullglob
+          examples=(spec/dcat-ap/examples/*.jsonld)
+          [ ${#examples[@]} -gt 0 ] || { echo "::error::няма DCAT-AP примери за валидиране"; exit 1; }
+          python -m ingestion.dcat.validate "${examples[@]}"
 
   # ---------------------------------------------------------------------------
   # Порта: SAST — статичен анализ на сигурността (Semgrep, OWASP правила).

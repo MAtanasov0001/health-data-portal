@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from urllib.parse import quote
 
 from ..disclosure import DisclosureReport
-from ..models import DatasetMetadata
+from ..models import DatasetMetadata, DisclosureSpec
 from ..snapshot import Snapshot
 
 # Каноничният домейн на портала. Конфигурируем чрез ``OHDP_BASE_URL`` (същата променлива като в
@@ -63,10 +64,44 @@ def _distributions(identifier: str, snapshot: Snapshot) -> list[dict[str, Any]]:
     return out
 
 
+def _concept(kind: str, column: str) -> dict[str, Any]:
+    """Локален skos:Concept за измерение/атрибут по StatDCAT-AP (стабилен IRI + етикет)."""
+    return {
+        "@id": f"{BASE}/def/{kind}/{quote(column, safe='')}",
+        "@type": "skos:Concept",
+        "skos:prefLabel": {"@value": column, "@language": "bg"},
+    }
+
+
+def _statistical(spec: DisclosureSpec, snapshot: Snapshot) -> dict[str, Any]:
+    """StatDCAT-AP свойства за статистически набор (измерения, атрибут-мярка, брой серии).
+
+    Порталните набори са агрегатна статистика (измерения + мярка), затова се описват по
+    StatDCAT-AP (namespace ``stat`` = http://data.europa.eu/s1n/): ``stat:dimension`` за
+    измеренията, ``stat:attribute`` за мерната колона и ``stat:numSeries`` за броя серии.
+    """
+    return {
+        "stat:numSeries": {
+            "@value": str(snapshot.row_count),
+            "@type": "xsd:nonNegativeInteger",
+        },
+        "stat:dimension": [_concept("dimension", d) for d in spec.dimension_columns],
+        "stat:attribute": [_concept("attribute", spec.measure_column)],
+    }
+
+
 def build_dataset(
-    metadata: DatasetMetadata, snapshot: Snapshot, disclosure: DisclosureReport
+    metadata: DatasetMetadata,
+    snapshot: Snapshot,
+    disclosure: DisclosureReport,
+    *,
+    stat_spec: DisclosureSpec | None = None,
 ) -> dict[str, Any]:
-    """Връща DCAT-AP dcat:Dataset като JSON-LD dict."""
+    """Връща DCAT-AP dcat:Dataset като JSON-LD dict.
+
+    Ако е подадена ``stat_spec`` (структурата за контрол на разкриването), наборът се обогатява
+    със StatDCAT-AP свойства — той е агрегатна статистика с измерения и мярка.
+    """
     ds_uri = f"{BASE}/dataset/{metadata.identifier}"
     record: dict[str, Any] = {
         "@id": ds_uri,
@@ -103,4 +138,6 @@ def build_dataset(
             for lang, kws in metadata.keyword.items()
             for kw in kws
         ]
+    if stat_spec is not None:
+        record.update(_statistical(stat_spec, snapshot))
     return record

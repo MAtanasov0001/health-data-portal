@@ -12,7 +12,9 @@
     "adms": "http://www.w3.org/ns/adms#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
-    "spdx": "http://spdx.org/rdf/terms#"
+    "spdx": "http://spdx.org/rdf/terms#",
+    "stat": "http://data.europa.eu/s1n/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "classes": {
     "Catalog": {
@@ -54,6 +56,16 @@
         "dct:provenance": {"obligation": "R", "type": "dct:ProvenanceStatement", "note": "титуляр-източник + метод на приемане (harvest/snapshot/файл)"},
         "dcat:distribution": {"obligation": "M", "type": "dcat:Distribution[]"},
         "healthPortal:disclosureControl": {"obligation": "M", "type": "object", "note": "прилаган контрол на разкриването — виж по-долу"}
+      }
+    },
+    "StatisticalDataset": {
+      "rdfType": "dcat:Dataset (StatDCAT-AP)",
+      "basedOn": "StatDCAT-AP (namespace stat: http://data.europa.eu/s1n/)",
+      "note": "Прилага се към агрегатните статистически набори (измерения + мярка). Разпознава се по наличие на свойство с префикс stat:.",
+      "properties": {
+        "stat:dimension": {"obligation": "M", "type": "skos:Concept[]", "note": "измеренията на наблюдението (напр. област, диагностична група)"},
+        "stat:attribute": {"obligation": "R", "type": "skos:Concept[]", "note": "мерната колона и мерни единици (напр. брой хоспитализации)"},
+        "stat:numSeries": {"obligation": "R", "type": "xsd:nonNegativeInteger", "note": "брой серии/наблюдения в набора"}
       }
     },
     "Distribution": {

@@ -126,6 +126,8 @@ _PREFIXES: dict[str, str] = {
     "owl": "http://www.w3.org/2002/07/owl#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "spdx": "http://spdx.org/rdf/terms#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "stat": "http://data.europa.eu/s1n/",
     "healthPortal": "https://data.health.egov.bg/def/",
 }
 

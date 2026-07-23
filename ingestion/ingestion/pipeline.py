@@ -104,7 +104,7 @@ def run(dataset_dir: Path, out_root: Path, *, audit: AuditTrail | None = None) -
         },
     )
 
-    dcat_record = build_dataset(metadata, snapshot, report)
+    dcat_record = build_dataset(metadata, snapshot, report, stat_spec=schema.disclosure)
     dcat_path = snapshot.path / "dcat.jsonld"
     dcat_path.write_text(
         json.dumps(dcat_record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

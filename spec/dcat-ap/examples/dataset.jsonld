@@ -7,6 +7,8 @@
     "adms": "http://www.w3.org/ns/adms#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "spdx": "http://spdx.org/rdf/terms#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "stat": "http://data.europa.eu/s1n/",
     "healthPortal": "https://data.health.egov.bg/ns/portal#"
   },
   "@id": "https://data.health.egov.bg/dataset/hospitalizacii-po-oblast-2023",
@@ -66,6 +68,26 @@
       {"@value": "Клетки с брой < 5 са потиснати; редови/колонни суми преизчислени, за да не се възстановяват потиснати стойности.", "@language": "bg"}
     ]
   },
+  "stat:numSeries": {"@value": "12", "@type": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"},
+  "stat:dimension": [
+    {
+      "@id": "https://data.health.egov.bg/def/dimension/oblast_nuts",
+      "@type": "skos:Concept",
+      "skos:prefLabel": [{"@value": "Област (NUTS 3)", "@language": "bg"}]
+    },
+    {
+      "@id": "https://data.health.egov.bg/def/dimension/diagnosticna_grupa",
+      "@type": "skos:Concept",
+      "skos:prefLabel": [{"@value": "Диагностична група", "@language": "bg"}]
+    }
+  ],
+  "stat:attribute": [
+    {
+      "@id": "https://data.health.egov.bg/def/attribute/broy_hospitalizacii",
+      "@type": "skos:Concept",
+      "skos:prefLabel": [{"@value": "Брой хоспитализации", "@language": "bg"}]
+    }
+  ],
   "dcat:distribution": [
     {
       "@type": "dcat:Distribution",
