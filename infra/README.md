@@ -16,7 +16,14 @@ cp .env.example .env          # само локални заместители, 
 docker compose up --build -d
 # 3) публикувай снапшотите в каталога (след като CKAN е здрав):
 docker compose --profile tools run --rm catalog-sync
+# 4) провери целия път end-to-end (API → CKAN → frontend):
+./smoke.sh
 ```
+
+`smoke.sh` проверява „златния път" от концепцията: списък → набор → изтегляне (CSV/JSON/XLSX),
+DCAT-AP/StatDCAT-AP формати, пагинация (МЕ90), уникален GET адрес (МЕ72) и CKAN-съвместимото
+харвестване. При нужда се дават други адреси или се пропускат услуги:
+`SKIP_CKAN=1 SKIP_FRONTEND=1 ./smoke.sh` (само API).
 
 Услуги след вдигане:
 
