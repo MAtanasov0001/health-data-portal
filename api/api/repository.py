@@ -171,9 +171,7 @@ class Repository:
     def collection_members(self, collection_id: str) -> list[DatasetVersion]:
         """Най-новите версии на всички таблици, чийто манифест сочи ``collection.id``."""
         members = [
-            dv
-            for dv in self.list_latest()
-            if (dv.collection or {}).get("id") == collection_id
+            dv for dv in self.list_latest() if (dv.collection or {}).get("id") == collection_id
         ]
         members.sort(key=lambda dv: dv.identifier)
         return members

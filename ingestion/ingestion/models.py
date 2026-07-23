@@ -72,6 +72,20 @@ class ProvenanceMeta(BaseModel):
     en: str | None = None
 
 
+class Governance(BaseModel):
+    """Структуриран управленски произход на набора (машинно четим, влиза в манифеста).
+
+    Формализира ``dct:provenance`` от профила (титуляр-източник + метод на приемане) и добавя
+    режима на ревю (виж ``docs/review-model.md``) и дали наборът докосва лични данни — за да е
+    проследимо, без да се разчита на свободния текст в ``provenance``.
+    """
+
+    source: str
+    ingestion_method: Literal["file", "harvest", "snapshot"]
+    review_tier: Literal["A", "B", "C"] = "B"
+    contains_personal_data: bool = False
+
+
 class DatasetMetadata(BaseModel):
     """Съдържанието на metadata.yaml — попълва DCAT-AP профила."""
 
@@ -88,6 +102,7 @@ class DatasetMetadata(BaseModel):
     access_rights: str = "PUBLIC"
     license: str = "CC-BY-4.0"
     provenance: ProvenanceMeta | None = None
+    governance: Governance | None = None
     version: str = "1.0.0"
 
     @field_validator("identifier")

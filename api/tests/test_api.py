@@ -113,11 +113,7 @@ def test_list_filter_unknown_query_is_empty(client: TestClient):
 
 def test_catalog_csv_distribution_has_bytesize_and_checksum(client: TestClient):
     ds = client.get("/v1/catalog.jsonld").json()["dcat:dataset"][0]
-    csv_dist = next(
-        d
-        for d in ds["dcat:distribution"]
-        if d["dct:format"]["@id"].endswith("/CSV")
-    )
+    csv_dist = next(d for d in ds["dcat:distribution"] if d["dct:format"]["@id"].endswith("/CSV"))
     assert csv_dist["dcat:byteSize"] > 0
     assert csv_dist["spdx:checksum"]["spdx:checksumValue"] == "a" * 64
 

@@ -251,11 +251,7 @@ def _collection_group(cid: str, members: list[DatasetVersion]) -> dict[str, Any]
     """Обобщение на една колекция (група таблици) за списъка ``/v1/collections``."""
     meta = members[0].collection or {}
     themes = sorted(
-        {
-            t["@id"].rsplit("/", 1)[-1]
-            for dv in members
-            for t in dv.dcat.get("dcat:theme", [])
-        }
+        {t["@id"].rsplit("/", 1)[-1] for dv in members for t in dv.dcat.get("dcat:theme", [])}
     )
     return {
         "id": cid,

@@ -39,4 +39,10 @@ provenance:
     by clinical pathway/procedure with primary and secondary diagnosis (Diagnoza Bulgaria).
     Ingested via file submission (12 monthly .xlsx aggregated to annual). The portal applies
     independent disclosure control before publication.
+# Структуриран (машинно четим) управленски произход — влиза в манифеста на снапшота.
+governance:
+  source: НЗОК (Национална здравноосигурителна каса)
+  ingestion_method: file
+  review_tier: B
+  contains_personal_data: false
 version: 1.0.0

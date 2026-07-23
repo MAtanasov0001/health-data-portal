@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from ingestion import vocab
-from ingestion.models import DatasetMetadata
+from ingestion.models import DatasetMetadata, Governance
 
 
 def _metadata(**overrides):
@@ -66,3 +66,28 @@ def test_nuts_bg_bounds():
     assert vocab.check_spatial(["BG", "BG3", "BG34", "BG411"]) == ["BG", "BG3", "BG34", "BG411"]
     with pytest.raises(ValueError):
         vocab.check_spatial(["DE"])
+
+
+def test_governance_valid():
+    g = Governance(source="НЗОК", ingestion_method="file")
+    assert g.review_tier == "B"
+    assert g.contains_personal_data is False
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("ingestion_method", "email"),
+        ("review_tier", "D"),
+    ],
+)
+def test_governance_rejects_bad_enum(field, value):
+    kwargs = {"source": "НЗОК", "ingestion_method": "file"}
+    kwargs[field] = value
+    with pytest.raises(ValidationError):
+        Governance(**kwargs)
+
+
+def test_governance_optional_on_metadata():
+    md = DatasetMetadata(**_metadata())
+    assert md.governance is None

@@ -21,6 +21,14 @@ keyword:
   en: [referrals, NHIF, outpatient care]
 license: CC-BY-4.0
 version: 1.0.0
+# Изрична атестация: данните са предварително агрегирани публични броеве (без контрол на
+# разкриването по този път — виж CollectionSpec.pre_aggregated).
+pre_aggregated: true
+governance:
+  source: НЗОК (Национална здравноосигурителна каса)
+  ingestion_method: file
+  review_tier: B
+  contains_personal_data: false
 tables:
   - file: po-vid.csv
     identifier: po-vid

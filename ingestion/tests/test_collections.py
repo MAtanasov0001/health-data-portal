@@ -56,6 +56,13 @@ def _write_collection(root: Path) -> Path:
         "keyword": {"bg": ["демо"]},
         "license": "CC-BY-4.0",
         "version": "1.0.0",
+        "pre_aggregated": True,
+        "governance": {
+            "source": "НЗОК",
+            "ingestion_method": "file",
+            "review_tier": "B",
+            "contains_personal_data": False,
+        },
         "tables": [
             {
                 "file": "po-oblast.csv",
@@ -91,8 +98,24 @@ def test_run_collection_writes_snapshot(tmp_path):
     assert manifest["collection"]["id"] == "demo-nzok"
     assert manifest["collection"]["table"] == "po-oblast"
     assert manifest["disclosure_control"]["method"] == "none"
+    assert manifest["disclosure_control"]["attested_pre_aggregated"] is True
+    assert manifest["governance"]["source"] == "НЗОК"
+    assert manifest["governance"]["ingestion_method"] == "file"
     assert (out / "demo-nzok-po-oblast" / "1.0.0" / "data.csv").exists()
     assert (out / "demo-nzok-po-oblast" / "1.0.0" / "dcat.jsonld").exists()
+
+
+def test_run_collection_refuses_non_attested(tmp_path):
+    coll_dir = _write_collection(tmp_path / "src")
+    spec_path = coll_dir / "collection.yaml"
+    import yaml
+
+    spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+    spec["pre_aggregated"] = False
+    spec_path.write_text(yaml.safe_dump(spec, allow_unicode=True), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="pre_aggregated"):
+        run_collection(coll_dir, tmp_path / "snapshots")
 
 
 def test_run_collection_immutable_version(tmp_path):

@@ -76,6 +76,8 @@ def write_snapshot(
             "total_cells": disclosure.total_cells,
         },
     }
+    if metadata.governance is not None:
+        manifest["governance"] = metadata.governance.model_dump()
     (target / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )

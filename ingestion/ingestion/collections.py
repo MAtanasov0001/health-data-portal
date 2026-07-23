@@ -26,7 +26,7 @@ import yaml
 from pydantic import BaseModel, Field, field_validator
 
 from . import vocab
-from .models import SLUG_RE
+from .models import SLUG_RE, Governance
 from .timeutil import now_iso
 
 _SLUG = SLUG_RE
@@ -67,6 +67,12 @@ class CollectionSpec(BaseModel):
     keyword: dict[str, list[str]] = Field(default_factory=dict)
     license: str = "CC-BY-4.0"
     version: str = "1.0.0"
+    # Изрична атестация, че данните са предварително агрегирани публични броеве. Колекциите
+    # НЕ минават контрол на разкриването (за разлика от основната тръба), затова тази декларация
+    # трябва да е съзнателна и записана, а не мълчаливо допускане: сурова таблица със запис-ниво
+    # данни не бива да влиза по този път. Задължителна (без стойност по подразбиране).
+    pre_aggregated: bool
+    governance: Governance | None = None
     tables: list[TableSpec]
 
     @field_validator("identifier")
@@ -245,8 +251,14 @@ def _write_table(
             "table": table.identifier,
             "table_title": table.title,
         },
-        "disclosure_control": {"method": "none", "reason": "pre-aggregated-public-counts"},
+        "disclosure_control": {
+            "method": "none",
+            "reason": "pre-aggregated-public-counts",
+            "attested_pre_aggregated": spec.pre_aggregated,
+        },
     }
+    if spec.governance is not None:
+        manifest["governance"] = spec.governance.model_dump()
     (target / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
@@ -279,6 +291,12 @@ def run_collection(
     import os
 
     spec = CollectionSpec.from_yaml(collection_dir / "collection.yaml")
+    if not spec.pre_aggregated:
+        raise ValueError(
+            f"Колекцията {spec.identifier} декларира pre_aggregated: false — но пътят за колекции "
+            f"НЕ прилага контрол на разкриването. Незагрегирани данни минават през основната "
+            f"тръба (pipeline.py) със схема + small-cell потискане, не тук."
+        )
     resolved_base = (base or os.environ.get("OHDP_BASE_URL", "https://data.health.egov.bg")).rstrip(
         "/"
     )
