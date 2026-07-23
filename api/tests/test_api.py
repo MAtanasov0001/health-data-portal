@@ -147,3 +147,48 @@ def test_catalog_ttl(client: TestClient):
     assert r.headers["content-type"].startswith("text/turtle")
     assert "a dcat:Catalog" in r.text
     assert r.text.count("a dcat:Dataset") == 2
+
+
+def test_api_version_header_on_every_response(client: TestClient):
+    for path in ("/v1/health", "/v1/datasets", "/v1/datasets/alpha"):
+        assert client.get(path).headers["X-API-Version"] == main.API_VERSION
+
+
+def test_latest_version_is_not_deprecated(client: TestClient):
+    r = client.get("/v1/datasets/alpha")  # най-новата (1.1.0)
+    assert r.headers["X-Dataset-Version"] == "1.1.0"
+    assert "Deprecation" not in r.headers
+    assert "deprecation" not in r.json()
+
+
+def test_old_version_is_deprecated_with_headers(client: TestClient):
+    r = client.get("/v1/datasets/alpha", params={"version": "1.0.0"})
+    assert r.headers["X-Dataset-Version"] == "1.0.0"
+    assert r.headers["Deprecation"] == "true"
+    assert r.headers["Sunset"]  # ISO краен срок на поддръжка (24 мес.)
+    assert 'rel="latest-version"' in r.headers["Link"]
+
+
+def test_old_version_deprecation_body(client: TestClient):
+    body = client.get("/v1/datasets/alpha", params={"version": "1.0.0"}).json()
+    dep = body["deprecation"]
+    assert dep["deprecated"] is True
+    assert dep["requested_version"] == "1.0.0"
+    assert dep["latest_version"] == "1.1.0"
+    assert dep["latest_url"].endswith("/v1/datasets/alpha")
+
+
+def test_sunset_is_24_months_after_supersede(client: TestClient):
+    import datetime as dt
+
+    body = client.get("/v1/datasets/alpha", params={"version": "1.0.0"}).json()
+    dep = body["deprecation"]
+    superseded = dt.datetime.fromisoformat(dep["superseded_at"])
+    sunset = dt.datetime.fromisoformat(dep["sunset"])
+    assert sunset.year - superseded.year == main.SUPPORT_YEARS
+
+
+def test_data_json_old_version_deprecation(client: TestClient):
+    r = client.get("/v1/datasets/alpha/data.json", params={"version": "1.0.0"})
+    assert r.headers["Deprecation"] == "true"
+    assert r.json()["deprecation"]["latest_version"] == "1.1.0"

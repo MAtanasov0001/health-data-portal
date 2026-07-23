@@ -11,12 +11,13 @@
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import io
 import os
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from . import formats
@@ -26,9 +27,13 @@ XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.s
 TURTLE_MEDIA_TYPE = "text/turtle; charset=utf-8"
 JSONLD_MEDIA_TYPE = "application/ld+json"
 
+API_VERSION = "1.0.0"  # версия на самия интерфейс (чл. 14, ал. 1), различна от версията на данните
+API_MAJOR = "v1"
+SUPPORT_YEARS = 2  # минимум 24 месеца поддръжка на стара версия (чл. 41, ал. 3; чл. 14, ал. 6)
+
 app = FastAPI(
     title="Портал за отворени данни в здравеопазването — публично API",
-    version="1.0.0",
+    version=API_VERSION,
     description="Четящо API за набори от здравни отворени данни (DCAT-AP, CKAN-съвместимо).",
     openapi_version="3.1.0",
 )
@@ -36,9 +41,59 @@ app = FastAPI(
 BASE_URL = os.environ.get("OHDP_BASE_URL", "https://data.health.egov.bg")
 
 
+@app.middleware("http")
+async def _advertise_api_version(request: Request, call_next: Any) -> Response:
+    """Всеки отговор носи версията на интерфейса (чл. 14, ал. 1) в машинночетим хедър."""
+    response: Response = await call_next(request)
+    response.headers["X-API-Version"] = API_VERSION
+    return response
+
+
 def get_repo() -> Repository:
     root = Path(os.environ.get("OHDP_SNAPSHOTS", "../ingestion/snapshots")).resolve()
     return Repository(root)
+
+
+def _plus_years(iso_ts: str, years: int) -> str:
+    """ISO-8601 времеви печат + ``years`` години (за края на гарантираната поддръжка)."""
+    base = dt.datetime.fromisoformat(iso_ts)
+    try:
+        return base.replace(year=base.year + years).isoformat()
+    except ValueError:  # 29 февруари в невисокосна година
+        return (base + dt.timedelta(days=365 * years)).isoformat()
+
+
+def _deprecation(dv: DatasetVersion, latest: DatasetVersion | None) -> dict[str, Any] | None:
+    """Машинночетимо известие, когато ``dv`` не е най-новата версия (чл. 14, ал. 4)."""
+    if latest is None or dv.version == latest.version:
+        return None
+    return {
+        "deprecated": True,
+        "requested_version": dv.version,
+        "latest_version": latest.version,
+        "latest_url": f"{BASE_URL}/{API_MAJOR}/datasets/{dv.identifier}",
+        "superseded_at": latest.created_at,
+        "sunset": _plus_years(latest.created_at, SUPPORT_YEARS),
+        "note": (
+            "Заявена е по-стара версия на набора. Поддържа се минимум 24 месеца от издаването "
+            "на следващата версия (чл. 41, ал. 3; чл. 14, ал. 6)."
+        ),
+    }
+
+
+def _apply_version(
+    repo: Repository, dv: DatasetVersion, response: Response
+) -> dict[str, Any] | None:
+    """Слага версийните/deprecation хедъри и връща машинночетимото известие (или ``None``)."""
+    response.headers["X-Dataset-Version"] = dv.version
+    latest = repo.latest(dv.identifier)
+    info = _deprecation(dv, latest)
+    if info is None:
+        return None
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = info["sunset"]
+    response.headers["Link"] = f'<{info["latest_url"]}>; rel="latest-version"'
+    return info
 
 
 def _titles(dcat: dict[str, Any]) -> dict[str, str]:
@@ -150,6 +205,7 @@ def _require(repo: Repository, identifier: str, version: str | None) -> DatasetV
 )
 def get_dataset(
     identifier: str,
+    response: Response,
     version: str | None = Query(None, description="Конкретна версия; по подразбиране най-новата"),
     accept: str = Header(default=""),
     repo: Repository = Depends(get_repo),
@@ -159,15 +215,23 @@ def get_dataset(
     dv = _require(repo, identifier, version)
     dcat = _enrich_dcat(dv)
     if "text/turtle" in accept:
-        return Response(formats.dataset_to_turtle(dcat), media_type=TURTLE_MEDIA_TYPE)
+        out: Response = Response(formats.dataset_to_turtle(dcat), media_type=TURTLE_MEDIA_TYPE)
+        _apply_version(repo, dv, out)
+        return out
     if "ld+json" in accept:
-        return JSONResponse(dcat, media_type=JSONLD_MEDIA_TYPE)
-    return {
+        out = JSONResponse(dcat, media_type=JSONLD_MEDIA_TYPE)
+        _apply_version(repo, dv, out)
+        return out
+    info = _apply_version(repo, dv, response)
+    body = {
         **_summary(dv),
         "checksum_sha256": dv.checksum_sha256,
         "dcat": dcat,
         "distributions": _distributions(dv),
     }
+    if info:
+        body["deprecation"] = info
+    return body
 
 
 @app.get("/v1/datasets/{identifier}/versions", tags=["набори"], summary="Всички версии на набор")
@@ -194,17 +258,19 @@ def data_csv(
 ) -> Response:
     dv = _require(repo, identifier, version)
     if page is None:  # пълен обемен файл (CSV дистрибуцията по DCAT е целият набор)
-        return PlainTextResponse(
+        out = PlainTextResponse(
             dv.data_csv(),
             media_type="text/csv; charset=utf-8",
             headers={"X-Total-Count": str(dv.row_count)},
         )
+        _apply_version(repo, dv, out)
+        return out
     header, window = dv.data_page((page - 1) * page_size, page_size)
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(header)
     writer.writerows(window)
-    return PlainTextResponse(
+    out = PlainTextResponse(
         buf.getvalue(),
         media_type="text/csv; charset=utf-8",
         headers={
@@ -213,11 +279,14 @@ def data_csv(
             "X-Page-Size": str(page_size),
         },
     )
+    _apply_version(repo, dv, out)
+    return out
 
 
 @app.get("/v1/datasets/{identifier}/data.json", tags=["данни"])
 def data_json(
     identifier: str,
+    response: Response,
     version: str | None = Query(None),
     page: int = Query(1, ge=1, description="Номер на страница (МЕ90)"),
     page_size: int = Query(100, ge=1, le=1000, description="Размер на страница (макс. 1000)"),
@@ -229,7 +298,8 @@ def data_json(
         {k: (None if v == "" else v) for k, v in zip(header, values, strict=False)}
         for values in window
     ]
-    return {
+    info = _apply_version(repo, dv, response)
+    body: dict[str, Any] = {
         "identifier": dv.identifier,
         "version": dv.version,
         "total": dv.row_count,
@@ -237,6 +307,9 @@ def data_json(
         "page_size": page_size,
         "rows": rows,
     }
+    if info:
+        body["deprecation"] = info
+    return body
 
 
 @app.get("/v1/datasets/{identifier}/data.xlsx", tags=["данни"], summary="Дистрибуция XLSX (МЕ34)")
@@ -249,7 +322,7 @@ def data_xlsx(
     rows = dv.iter_data()
     header = next(rows, [])
     content = formats.xlsx_bytes(header, rows)
-    return Response(
+    out = Response(
         content,
         media_type=XLSX_MEDIA_TYPE,
         headers={
@@ -257,6 +330,8 @@ def data_xlsx(
             "X-Total-Count": str(dv.row_count),
         },
     )
+    _apply_version(repo, dv, out)
+    return out
 
 
 @app.get(
@@ -270,7 +345,9 @@ def dataset_ttl(
     repo: Repository = Depends(get_repo),
 ) -> Response:
     dv = _require(repo, identifier, version)
-    return Response(formats.dataset_to_turtle(_enrich_dcat(dv)), media_type=TURTLE_MEDIA_TYPE)
+    out = Response(formats.dataset_to_turtle(_enrich_dcat(dv)), media_type=TURTLE_MEDIA_TYPE)
+    _apply_version(repo, dv, out)
+    return out
 
 
 @app.get(
@@ -284,7 +361,9 @@ def dataset_jsonld(
     repo: Repository = Depends(get_repo),
 ) -> JSONResponse:
     dv = _require(repo, identifier, version)
-    return JSONResponse(_enrich_dcat(dv), media_type=JSONLD_MEDIA_TYPE)
+    out = JSONResponse(_enrich_dcat(dv), media_type=JSONLD_MEDIA_TYPE)
+    _apply_version(repo, dv, out)
+    return out
 
 
 @app.get(
@@ -298,19 +377,23 @@ def data_negotiated(
 ) -> Response:
     """Един адрес, много формати: ``Accept`` избира CSV, XLSX или JSON (по подр. JSON)."""
     dv = _require(repo, identifier, version)
+    out: Response
     if "text/csv" in accept:
-        return PlainTextResponse(
+        out = PlainTextResponse(
             dv.data_csv(),
             media_type="text/csv; charset=utf-8",
             headers={"X-Total-Count": str(dv.row_count)},
         )
-    if "spreadsheet" in accept or "ms-excel" in accept:
+    elif "spreadsheet" in accept or "ms-excel" in accept:
         rows = dv.iter_data()
         header = next(rows, [])
-        return Response(formats.xlsx_bytes(header, rows), media_type=XLSX_MEDIA_TYPE)
-    return JSONResponse(
-        {"identifier": dv.identifier, "version": dv.version, "download": _distributions(dv)}
-    )
+        out = Response(formats.xlsx_bytes(header, rows), media_type=XLSX_MEDIA_TYPE)
+    else:
+        out = JSONResponse(
+            {"identifier": dv.identifier, "version": dv.version, "download": _distributions(dv)}
+        )
+    _apply_version(repo, dv, out)
+    return out
 
 
 @app.get(
@@ -320,6 +403,7 @@ def data_negotiated(
 )
 def data_summary(
     identifier: str,
+    response: Response,
     dimension: str | None = Query(None, description="Категорийна колона; по подр. първата"),
     measure: str | None = Query(None, description="Числова колона; по подр. последната"),
     top: int = Query(10, ge=1, le=50, description="Брой групи (топ по стойност)"),
@@ -334,7 +418,8 @@ def data_summary(
         if name not in columns:
             raise HTTPException(status_code=400, detail=f"Няма колона '{name}' в набора")
     groups = dv.aggregate(dim, mea, top)
-    return {
+    info = _apply_version(repo, dv, response)
+    body: dict[str, Any] = {
         "identifier": dv.identifier,
         "version": dv.version,
         "dimension": dim,
@@ -342,6 +427,9 @@ def data_summary(
         "top": top,
         "groups": [{"key": k, "value": v, "count": c} for k, v, c in groups],
     }
+    if info:
+        body["deprecation"] = info
+    return body
 
 
 _CATALOG_TITLE_BG = "Портал за отворени данни в здравеопазването"
