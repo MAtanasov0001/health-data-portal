@@ -3,8 +3,17 @@ import Link from "next/link";
 
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
+import { alternates } from "@/lib/site";
 
-export const metadata: Metadata = { title: "За портала" };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang: rawLang } = await params;
+  const lang = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
+  return { title: getDictionary(lang).about.title, alternates: alternates(lang, "/za-portala") };
+}
 
 export default async function AboutPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang: rawLang } = await params;

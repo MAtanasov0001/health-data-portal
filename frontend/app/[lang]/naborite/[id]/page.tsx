@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
+import { alternates } from "@/lib/site";
 
 interface Params {
   lang: string;
@@ -47,6 +48,7 @@ export async function generateMetadata({
   const title = localizedTitle(ds.title, lang);
   return {
     title,
+    alternates: alternates(lang, `/naborite/${id}`),
     openGraph: { title, type: "article", locale: lang },
   };
 }
@@ -133,6 +135,8 @@ export default async function DatasetDetailPage({
             groups={summary.groups}
             title={`${label(summary.measure)} — ${label(summary.dimension)}`}
             valueLabel={label(summary.measure)}
+            keyLabel={label(summary.dimension)}
+            lang={lang}
           />
         </section>
       )}

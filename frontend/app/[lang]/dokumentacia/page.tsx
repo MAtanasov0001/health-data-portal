@@ -4,8 +4,17 @@ import Link from "next/link";
 import { API_BASE, CKAN_BASE } from "@/lib/api";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
+import { alternates } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Техническа документация" };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang: rawLang } = await params;
+  const lang = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
+  return { title: getDictionary(lang).docs.title, alternates: alternates(lang, "/dokumentacia") };
+}
 
 export default async function DocsPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang: rawLang } = await params;

@@ -6,6 +6,7 @@ import CollectionExplorer from "@/components/CollectionExplorer";
 import { API_BASE, getCollectionWithData, listCollections, localizedTitle } from "@/lib/api";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
+import { alternates } from "@/lib/site";
 
 interface Params {
   lang: string;
@@ -34,7 +35,11 @@ export async function generateMetadata({
   const loaded = await getCollectionWithData(id);
   if (!loaded) return { title: "404" };
   const title = localizedTitle(loaded.collection.title, lang);
-  return { title, openGraph: { title, type: "website", locale: lang } };
+  return {
+    title,
+    alternates: alternates(lang, `/naborite/kolekciya/${id}`),
+    openGraph: { title, type: "website", locale: lang },
+  };
 }
 
 export default async function CollectionPage({ params }: { params: Promise<Params> }) {
@@ -113,6 +118,8 @@ export default async function CollectionPage({ params }: { params: Promise<Param
           apiHint: ex.apiHint,
           tableTab: ex.tableTab,
           chartTab: ex.chartTab,
+          chartEmpty: ex.chartEmpty,
+          noResults: ex.noResults,
         }}
       />
     </>

@@ -140,6 +140,26 @@ _DIST_FORMATS = [
 ]
 
 
+def _is_csv_dist(dist: Any, csv_fid: str) -> bool:
+    return isinstance(dist, dict) and dist.get("dct:format", {}).get("@id", "") == csv_fid
+
+
+def _with_csv_provenance(dist: dict[str, Any], dv: DatasetVersion) -> dict[str, Any]:
+    """Добавя ``dcat:byteSize`` и ``spdx:checksum`` към CSV дистрибуцията (МЕ34, проследимост).
+
+    Размерът и контролната сума са от неизменяемия снапшот — правят изтеглянето проверимо
+    (целостност) и захранват харвестърите с точни метаданни за файла.
+    """
+    enriched = dict(dist)
+    enriched["dcat:byteSize"] = dv.csv_bytes
+    enriched["spdx:checksum"] = {
+        "@type": "spdx:Checksum",
+        "spdx:algorithm": {"@id": "spdx:checksumAlgorithm_sha256"},
+        "spdx:checksumValue": dv.checksum_sha256,
+    }
+    return enriched
+
+
 def _enrich_dcat(dv: DatasetVersion) -> dict[str, Any]:
     """Връща DCAT записа от снапшота, допълнен с дистрибуции за всички формати (МЕ34).
 
@@ -148,7 +168,8 @@ def _enrich_dcat(dv: DatasetVersion) -> dict[str, Any]:
     """
     dcat = dict(dv.dcat)
     ds_uri = f"{BASE_URL}/api/v1/datasets/{dv.identifier}"
-    existing = dcat.get("dcat:distribution", [])
+    csv_fid = _FILE_TYPE + "CSV"
+    existing = list(dcat.get("dcat:distribution", []))
     present = {d.get("dct:format", {}).get("@id", "") for d in existing if isinstance(d, dict)}
     extra: list[dict[str, Any]] = []
     for path, ftype, media in _DIST_FORMATS:
@@ -165,8 +186,10 @@ def _enrich_dcat(dv: DatasetVersion) -> dict[str, Any]:
                 "dct:format": {"@id": fid},
             }
         )
-    if extra:
-        dcat["dcat:distribution"] = [*existing, *extra]
+    merged = [
+        _with_csv_provenance(d, dv) if _is_csv_dist(d, csv_fid) else d for d in (*existing, *extra)
+    ]
+    dcat["dcat:distribution"] = merged
     return dcat
 
 
@@ -179,18 +202,40 @@ def health() -> dict[str, str]:
 def list_datasets(
     page: int = Query(1, ge=1, description="Номер на страница (МЕ90)"),
     page_size: int = Query(20, ge=1, le=100, description="Размер на страница (макс. 100)"),
+    q: str | None = Query(None, description="Търсене по заглавие/идентификатор (без регистър)"),
+    theme: str | None = Query(None, description="Филтър по тема (DCAT-AP код, напр. HEAL)"),
     repo: Repository = Depends(get_repo),
 ) -> dict[str, Any]:
-    items = repo.list_latest()
-    total = len(items)
+    summaries = [_summary(dv) for dv in repo.list_latest()]
+    summaries = _filter_datasets(summaries, q=q, theme=theme)
+    total = len(summaries)
     start = (page - 1) * page_size
-    window = items[start : start + page_size]
     return {
         "total": total,
         "page": page,
         "page_size": page_size,
-        "items": [_summary(dv) for dv in window],
+        "items": summaries[start : start + page_size],
     }
+
+
+def _filter_datasets(
+    summaries: list[dict[str, Any]], *, q: str | None, theme: str | None
+) -> list[dict[str, Any]]:
+    """Клиентски филтри за каталога: пълнотекстово по заглавие/идентификатор + по тема."""
+    result = summaries
+    if theme:
+        want = theme.strip().upper()
+        result = [s for s in result if want in {t.upper() for t in s.get("themes", [])}]
+    if q:
+        needle = q.strip().lower()
+        if needle:
+            result = [s for s in result if _matches(s, needle)]
+    return result
+
+
+def _matches(summary: dict[str, Any], needle: str) -> bool:
+    haystack = [summary.get("identifier", ""), *(summary.get("title") or {}).values()]
+    return any(needle in str(value).lower() for value in haystack)
 
 
 def _titles_dict(value: Any) -> dict[str, str]:
@@ -513,6 +558,25 @@ _CATALOG_TITLE_EN = "Open Health Data Portal"
 _CATALOG_PUBLISHER = "МИДТ"
 
 
+def _data_service() -> dict[str, Any]:
+    """DCAT-AP DataService за публичното четящо API (чл. 41, API-first).
+
+    Прави API-то откриваемо от харвестъри като самостоятелна услуга, не само като файлове —
+    ``dcat:endpointDescription`` сочи OpenAPI дефиницията, ``endpointURL`` — базовия път.
+    """
+    return {
+        "@type": "dcat:DataService",
+        "@id": f"{BASE_URL}/v1",
+        "dct:title": [
+            {"@value": "API за отворени здравни данни", "@language": "bg"},
+            {"@value": "Open Health Data API", "@language": "en"},
+        ],
+        "dcat:endpointURL": {"@id": f"{BASE_URL}/v1"},
+        "dcat:endpointDescription": {"@id": f"{BASE_URL}/openapi.json"},
+        "dct:conformsTo": {"@id": "https://spec.openapis.org/oas/3.1"},
+    }
+
+
 @app.get("/v1/catalog.jsonld", tags=["интероперативност"], summary="DCAT-AP каталог (JSON-LD)")
 def catalog(repo: Repository = Depends(get_repo)) -> JSONResponse:
     datasets = [_enrich_dcat(dv) for dv in repo.list_latest()]
@@ -529,6 +593,7 @@ def catalog(repo: Repository = Depends(get_repo)) -> JSONResponse:
         ],
         "dct:publisher": {"@type": "foaf:Agent", "foaf:name": _CATALOG_PUBLISHER},
         "dcat:dataset": datasets,
+        "dcat:service": [_data_service()],
     }
     return JSONResponse(doc, media_type=JSONLD_MEDIA_TYPE)
 

@@ -1,9 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import BarChart from "@/components/BarChart";
 import { getSummary, listDatasets, localizedTitle } from "@/lib/api";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
+import { alternates } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang: rawLang } = await params;
+  const lang = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
+  return { alternates: alternates(lang, "") };
+}
 
 // Пилотни набори, използвани за началните визуализации (сумата на реимбурса и броя случаи).
 const CHART_MONEY_ID = "deynosti-lekarstva-nzok-2025";
@@ -125,6 +137,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 groups={moneySummary.groups}
                 title={dict.home.chartsMoney}
                 valueLabel={lang === "bg" ? "лв." : "BGN"}
+                lang={lang}
               />
             )}
             {casesSummary && casesSummary.groups.length > 0 && (
@@ -132,6 +145,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 groups={casesSummary.groups}
                 title={dict.home.chartsCases}
                 valueLabel={lang === "bg" ? "случаи" : "cases"}
+                lang={lang}
               />
             )}
           </div>

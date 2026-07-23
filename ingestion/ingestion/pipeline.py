@@ -30,7 +30,9 @@ class IngestResult:
 
 
 def _read_csv(path: Path) -> list[dict[str, str]]:
-    with path.open(encoding="utf-8", newline="") as fh:
+    # utf-8-sig: министерските Excel/CSV експорти често носят BOM; иначе първото
+    # заглавие на колона става "\ufeff…" и валидацията пада с „непозната колона".
+    with path.open(encoding="utf-8-sig", newline="") as fh:
         return list(csv.DictReader(fh))
 
 

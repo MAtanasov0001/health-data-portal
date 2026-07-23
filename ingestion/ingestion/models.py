@@ -136,6 +136,19 @@ def validate_rows(rows: list[dict[str, str]], schema: DatasetSchema) -> list[dic
     return normalized
 
 
+def _strip_grouping(raw: str, *, decimal: bool = False) -> str:
+    """Нормализира числов вход от министерски експорти.
+
+    Премахва разделители за хиляди (интервали, вкл. неразделим/тесен интервал). За цели
+    числа третира запетаята като групиращ разделител; за десетични — като десетичен знак
+    (българска практика: „1 234,56").
+    """
+    cleaned = re.sub(r"\s", "", raw)
+    if decimal:
+        return cleaned.replace(",", ".")
+    return cleaned.replace(",", "")
+
+
 def _coerce(raw: str, col: ColumnSpec, *, row_no: int) -> Any:
     if col.type == "string":
         return raw
@@ -143,7 +156,7 @@ def _coerce(raw: str, col: ColumnSpec, *, row_no: int) -> Any:
         if raw == SUPPRESSED_MARKER and col.type == "count_or_suppressed":
             return SUPPRESSED_MARKER
         try:
-            value = int(raw)
+            value = int(_strip_grouping(raw))
         except ValueError as exc:
             raise SchemaValidationError(
                 f"Ред {row_no}: '{col.name}'='{raw}' не е цяло число"
@@ -153,7 +166,7 @@ def _coerce(raw: str, col: ColumnSpec, *, row_no: int) -> Any:
         return value
     if col.type == "decimal":
         try:
-            number = float(raw.replace(",", "."))
+            number = float(_strip_grouping(raw, decimal=True))
         except ValueError as exc:
             raise SchemaValidationError(f"Ред {row_no}: '{col.name}'='{raw}' не е число") from exc
         if number < 0:

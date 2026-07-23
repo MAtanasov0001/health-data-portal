@@ -87,6 +87,47 @@ def test_catalog_jsonld(client: TestClient):
     assert len(r.json()["dcat:dataset"]) == 2
 
 
+def test_list_filter_by_query(client: TestClient):
+    body = client.get("/v1/datasets", params={"q": "beta"}).json()
+    ids = [d["identifier"] for d in body["items"]]
+    assert ids == ["beta"]
+    assert body["total"] == 1
+
+
+def test_list_filter_by_query_is_case_insensitive(client: TestClient):
+    body = client.get("/v1/datasets", params={"q": "ALPHA"}).json()
+    assert [d["identifier"] for d in body["items"]] == ["alpha"]
+
+
+def test_list_filter_by_theme(client: TestClient):
+    body = client.get("/v1/datasets", params={"theme": "HEAL"}).json()
+    assert body["total"] == 2
+    assert client.get("/v1/datasets", params={"theme": "EDUC"}).json()["total"] == 0
+
+
+def test_list_filter_unknown_query_is_empty(client: TestClient):
+    body = client.get("/v1/datasets", params={"q": "zzz-nomatch"}).json()
+    assert body["items"] == []
+    assert body["total"] == 0
+
+
+def test_catalog_csv_distribution_has_bytesize_and_checksum(client: TestClient):
+    ds = client.get("/v1/catalog.jsonld").json()["dcat:dataset"][0]
+    csv_dist = next(
+        d
+        for d in ds["dcat:distribution"]
+        if d["dct:format"]["@id"].endswith("/CSV")
+    )
+    assert csv_dist["dcat:byteSize"] > 0
+    assert csv_dist["spdx:checksum"]["spdx:checksumValue"] == "a" * 64
+
+
+def test_catalog_advertises_data_service(client: TestClient):
+    service = client.get("/v1/catalog.jsonld").json()["dcat:service"]
+    assert service[0]["@type"] == "dcat:DataService"
+    assert service[0]["dcat:endpointDescription"]["@id"].endswith("/openapi.json")
+
+
 def test_dataset_detail_lists_all_formats(client: TestClient):
     dists = client.get("/v1/datasets/alpha").json()["distributions"]
     assert set(dists) == {"csv", "json", "xlsx", "rdf"}

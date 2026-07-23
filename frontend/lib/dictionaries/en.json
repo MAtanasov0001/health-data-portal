@@ -77,7 +77,21 @@
     "collectionsLead": "Groups of related tables under a common theme — with interactive visualization (metadata → table → filter → chart).",
     "collectionBadge": "Collection",
     "tables": "tables",
-    "standaloneTitle": "Standalone datasets"
+    "standaloneTitle": "Standalone datasets",
+    "searchLabel": "Search datasets",
+    "searchPlaceholder": "Search by title or identifier…",
+    "themeAll": "All themes",
+    "resultsOne": "1 result",
+    "resultsMany": "results",
+    "noResults": "No datasets match your search."
+  },
+  "themeLabels": {
+    "HEAL": "Health",
+    "SOCI": "Society",
+    "GOVE": "Government",
+    "ECON": "Economy",
+    "EDUC": "Education",
+    "ENVI": "Environment"
   },
   "explorer": {
     "chooseTable": "Choose a table",
@@ -96,6 +110,8 @@
     "apiHint": "Data via API:",
     "tableTab": "Table",
     "chartTab": "Chart",
+    "chartEmpty": "No numeric data for the selected measure.",
+    "noResults": "No rows match the filter.",
     "tableCount": "Tables",
     "totalRows": "Total rows"
   },

@@ -12,7 +12,12 @@ const groups: SummaryGroup[] = [
 describe("BarChart", () => {
   it("renders an accessible img with one bar per group", () => {
     const { container } = render(
-      <BarChart groups={groups} title="Реимбурсна сума — РЗОК" valueLabel="Реимбурсна сума" />,
+      <BarChart
+        groups={groups}
+        title="Реимбурсна сума — РЗОК"
+        valueLabel="Реимбурсна сума"
+        lang="bg"
+      />,
     );
     expect(screen.getByRole("img", { name: "Реимбурсна сума — РЗОК" })).toBeInTheDocument();
     expect(container.querySelectorAll("rect.chart-bar")).toHaveLength(2);
@@ -21,7 +26,7 @@ describe("BarChart", () => {
   });
 
   it("renders nothing for an empty dataset", () => {
-    const { container } = render(<BarChart groups={[]} title="x" valueLabel="y" />);
+    const { container } = render(<BarChart groups={[]} title="x" valueLabel="y" lang="bg" />);
     expect(container.firstChild).toBeNull();
   });
 });

@@ -5,6 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { i18n, isLocale, type Locale } from "@/i18n-config";
 import { getDictionary } from "@/lib/dictionaries";
+import { SITE_URL } from "@/lib/site";
 
 export function generateStaticParams() {
   return i18n.locales.map((lang) => ({ lang }));
@@ -19,6 +20,7 @@ export async function generateMetadata({
   const lang = isLocale(rawLang) ? rawLang : i18n.defaultLocale;
   const dict = getDictionary(lang);
   return {
+    metadataBase: new URL(SITE_URL),
     title: {
       default: dict.site.name,
       template: `%s · ${dict.site.short}`,
@@ -27,6 +29,8 @@ export async function generateMetadata({
     openGraph: {
       title: dict.site.name,
       description: dict.home.lead,
+      siteName: dict.site.name,
+      url: `/${lang}`,
       locale: lang,
       type: "website",
     },

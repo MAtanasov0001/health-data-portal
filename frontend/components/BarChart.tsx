@@ -1,18 +1,21 @@
 import type { SummaryGroup } from "@/lib/api";
+import { numberFormat } from "@/lib/format";
 
 interface Props {
   groups: SummaryGroup[];
   title: string;
   valueLabel: string;
+  lang: string;
+  keyLabel?: string;
 }
-
-const nf = new Intl.NumberFormat("bg-BG", { maximumFractionDigits: 2 });
 
 // Хоризонтална стълбовидна графика на чист SVG (без зависимости). Достъпна: контейнерът е
 // figure с заглавие, SVG е role="img" с aria-label, а всяка стълба носи <title> с точната
 // стойност. За екранни четци има и еквивалентна скрита таблица със същите числа.
-export default function BarChart({ groups, title, valueLabel }: Props) {
+export default function BarChart({ groups, title, valueLabel, lang, keyLabel }: Props) {
   if (groups.length === 0) return null;
+
+  const nf = numberFormat(lang);
 
   const max = Math.max(...groups.map((g) => g.value));
   const rowH = 30;
@@ -66,8 +69,8 @@ export default function BarChart({ groups, title, valueLabel }: Props) {
         <caption>{title}</caption>
         <thead>
           <tr>
+            <th scope="col">{keyLabel ?? title}</th>
             <th scope="col">{valueLabel}</th>
-            <th scope="col">value</th>
           </tr>
         </thead>
         <tbody>

@@ -34,7 +34,7 @@ class DatasetVersion:
 
     @property
     def collection(self) -> dict[str, Any] | None:
-        """Метаданни за колекцията (група таблици), ако наборът е член на такава — иначе ``None``."""
+        """Метаданни за колекцията (група таблици), ако наборът е член на такава; иначе ``None``."""
         value = self.manifest.get("collection")
         return value if isinstance(value, dict) else None
 
@@ -50,6 +50,11 @@ class DatasetVersion:
 
     def data_csv(self) -> str:
         return (self.path / "data.csv").read_text(encoding="utf-8")
+
+    @property
+    def csv_bytes(self) -> int:
+        """Размер на CSV дистрибуцията в байтове (за ``dcat:byteSize``)."""
+        return (self.path / "data.csv").stat().st_size
 
     def data_page(self, offset: int, limit: int) -> tuple[list[str], list[list[str]]]:
         """Чете хедъра + прозорец от ``limit`` реда след ``offset`` без да зарежда целия файл.

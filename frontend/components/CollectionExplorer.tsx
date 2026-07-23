@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import type { TableData } from "@/lib/api";
+import { numberFormat } from "@/lib/format";
 
 type ChartType = "bar" | "pie" | "none";
 
@@ -23,6 +24,8 @@ interface ExplorerStrings {
   apiHint: string;
   tableTab: string;
   chartTab: string;
+  chartEmpty: string;
+  noResults: string;
 }
 
 interface Props {
@@ -32,8 +35,6 @@ interface Props {
   labels: Record<string, string>;
   strings: ExplorerStrings;
 }
-
-const nf = new Intl.NumberFormat("bg-BG", { maximumFractionDigits: 2 });
 
 const PALETTE = [
   "#00664d",
@@ -90,6 +91,9 @@ export default function CollectionExplorer({ tables, lang, apiBase, labels, stri
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [topN, setTopN] = useState(10);
   const [filter, setFilter] = useState("");
+  const [view, setView] = useState<"chart" | "table">("chart");
+
+  const nf = numberFormat(lang);
 
   function selectTable(i: number) {
     const t = tables[i];
@@ -151,6 +155,33 @@ export default function CollectionExplorer({ tables, lang, apiBase, labels, stri
           {strings.measure}: {table.measures.map((m) => label(labels, m)).join(", ")}
         </p>
 
+        <div className="explorer-tabs" role="tablist" aria-label={titleText}>
+          <button
+            type="button"
+            role="tab"
+            id="tab-chart"
+            aria-selected={view === "chart"}
+            aria-controls="panel-chart"
+            className={view === "chart" ? "is-active" : ""}
+            onClick={() => setView("chart")}
+          >
+            {strings.chartTab}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-table"
+            aria-selected={view === "table"}
+            aria-controls="panel-table"
+            className={view === "table" ? "is-active" : ""}
+            onClick={() => setView("table")}
+          >
+            {strings.tableTab}
+          </button>
+        </div>
+
+        {view === "chart" && (
+        <div id="panel-chart" role="tabpanel" aria-labelledby="tab-chart">
         <div className="explorer-controls">
           <label>
             <span>{strings.dimension}</span>
@@ -245,7 +276,7 @@ export default function CollectionExplorer({ tables, lang, apiBase, labels, stri
                   })()}
                   <circle cx="100" cy="100" r="45" fill="#fff" />
                 </svg>
-                <ul className="pie-legend">
+                <ul className="pie-legend" aria-hidden="true">
                   {groups.map((g, i) => (
                     <li key={g.key}>
                       <span className="pie-swatch" style={{ background: PALETTE[i % PALETTE.length] }} aria-hidden="true" />
@@ -274,7 +305,14 @@ export default function CollectionExplorer({ tables, lang, apiBase, labels, stri
             </table>
           </figure>
         )}
+        {chartType !== "none" && groups.length === 0 && (
+          <p className="explorer-empty">{strings.chartEmpty}</p>
+        )}
+        </div>
+        )}
 
+        {view === "table" && (
+        <div id="panel-table" role="tabpanel" aria-labelledby="tab-table">
         <div className="explorer-filter">
           <label>
             <span>{strings.filter}</span>
@@ -290,28 +328,39 @@ export default function CollectionExplorer({ tables, lang, apiBase, labels, stri
           </span>
         </div>
 
-        <div className="table-scroll" tabIndex={0} role="region" aria-label={titleText}>
-          <table className="data">
-            <thead>
-              <tr>
-                {table.columns.map((col) => (
-                  <th key={col} scope="col">
-                    {label(labels, col)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.slice(0, 200).map((row, i) => (
-                <tr key={i}>
+        {filteredRows.length === 0 ? (
+          <p className="explorer-empty">{strings.noResults}</p>
+        ) : (
+          <div className="table-scroll" tabIndex={0} role="region" aria-label={titleText}>
+            <table className="data">
+              <thead>
+                <tr>
                   {table.columns.map((col) => (
-                    <td key={col}>{row[col] ?? "—"}</td>
+                    <th key={col} scope="col">
+                      {label(labels, col)}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredRows.slice(0, 200).map((row, i) => (
+                  <tr key={i}>
+                    {table.columns.map((col) => (
+                      <td key={col}>{row[col] ?? "—"}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {filteredRows.length > 200 && (
+          <p className="meta">
+            {strings.showingTop} 200 / {filteredRows.length} {strings.rows}
+          </p>
+        )}
         </div>
+        )}
 
         <p className="meta">
           {strings.apiHint}{" "}
