@@ -18,9 +18,11 @@
 /.github/                       @midt/platform
 
 # --- Режим C (критичен): експерт по сигурност + двама одобряващи ---
-# (директориите се добавят при започване на разработката на ядрото)
+# По-специфичните правила отдолу печелят над режим-B `/api/` и `/ingestion/` по-горе.
+/api/**/security/               @midt/security @midt/backend
 /api/**/auth/                   @midt/security @midt/platform
 /ingestion/**/disclosure/       @midt/security @midt/data-protection
 /ingestion/**/anonymization/    @midt/security @midt/data-protection
 /infra/**/secrets/              @midt/security @midt/platform
 SECURITY.md                     @midt/security
+docs/security-architecture.md   @midt/security
